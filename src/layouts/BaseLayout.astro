@@ -11,6 +11,11 @@ interface Props {
 
 const { title, description = site.summary } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${site.role}`;
+
+// Derive the production host(s) from the configured site URL, so the analytics
+// gate stays in sync with the canonical domain (single source of truth).
+const prodHost = new URL(Astro.site ?? 'https://slimfrikha.dev').hostname;
+const analyticsHosts = [prodHost, `www.${prodHost}`];
 ---
 
 <!doctype html>
@@ -26,6 +31,20 @@ const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${site.
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline define:vars={{ analyticsHosts }}>
+      // Load analytics only on the production host, so a copy-paste of this
+      // page onto another domain can't send hits to our GoatCounter endpoint.
+      // This also keeps localhost/dev out of the stats (no allow_local needed);
+      // to test tracking locally, temporarily add 'localhost' to analyticsHosts.
+      if (analyticsHosts.includes(location.hostname)) {
+        const s = document.createElement('script');
+        s.async = true;
+        s.src = '//gc.zgo.at/count.js';
+        s.dataset.goatcounter = 'https://slimfrikha.goatcounter.com/count';
+        s.dataset.goatcounterSettings = JSON.stringify({ title: 'Home' });
+        document.head.appendChild(s);
+      }
+    </script>
     <script is:inline>
       // Flag JS so reveal styles apply only when they can be undone.
       document.documentElement.classList.add('js');
@@ -38,6 +57,26 @@ const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${site.
     </main>
     <Footer />
     <script>
+      // GoatCounter counts the initial pageview only; this one-pager navigates
+      // by #section (both clicks and scrolling), so log each section once.
+      const gc = () => (window as unknown as { goatcounter?: { count: (o: { path: string; title?: string; event?: boolean }) => void } }).goatcounter;
+      const counted = new Set<string>();
+      // Turn a section id into a readable title, e.g. "open-source" -> "Open Source".
+      const label = (id: string) => id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const trackSection = (id: string) => {
+        if (!id || counted.has(id)) return;
+        counted.add(id);
+        gc()?.count({ path: location.pathname + '#' + id, title: label(id) });
+      };
+      window.addEventListener('hashchange', () => trackSection(location.hash.slice(1)));
+
+      // Track clicks on tagged links (hero buttons + outbound links) as events,
+      // one distinct id per link via its data-gc attribute.
+      document.addEventListener('click', (e) => {
+        const a = (e.target as Element).closest?.('a[data-gc]') as HTMLElement | null;
+        if (a?.dataset.gc) gc()?.count({ path: a.dataset.gc, event: true });
+      });
+
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // Scroll-reveal: fade sections in once as they enter view.
@@ -79,6 +118,13 @@ const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${site.
           navLinks.forEach((l) => l.classList.remove('active'));
           if (activeId && navLinks.has(activeId)) {
             navLinks.get(activeId).classList.add('active');
+          }
+          // Reflect the scrolled-to section in the URL (no scroll jump, no
+          // history spam) and count it. replaceState skips the hashchange
+          // event, so scrolling is tracked here and clicks via the listener.
+          if (activeId && activeId !== location.hash.slice(1)) {
+            history.replaceState(null, '', '#' + activeId);
+            trackSection(activeId);
           }
         },
         { rootMargin: '-45% 0px -50% 0px' },

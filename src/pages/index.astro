@@ -9,6 +9,9 @@ import { publications } from '../data/publications';
 import { patents } from '../data/patents';
 import { talks } from '../data/talks';
 import { education } from '../data/education';
+
+// Slugify a label into a stable GoatCounter event id.
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 ---
 
 <BaseLayout description={site.summary}>
@@ -27,7 +30,7 @@ import { education } from '../data/education';
         </div>
         <div class="link-row" style="margin-top:1.5rem;">
           {site.links.map((l) => (
-            <a class="btn" href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>
+            <a class="btn" data-gc={`btn-${slug(l.label)}`} href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>
           ))}
         </div>
       </div>
@@ -49,7 +52,7 @@ import { education } from '../data/education';
         <div class="head">
           <h3>
             {job.role} ·{' '}
-            {job.companyUrl ? <a href={job.companyUrl} target="_blank" rel="noopener">{job.company}</a> : <span>{job.company}</span>}
+            {job.companyUrl ? <a data-gc={`exp-${slug(job.company)}`} href={job.companyUrl} target="_blank" rel="noopener">{job.company}</a> : <span>{job.company}</span>}
           </h3>
           <span class="meta">{job.start} — {job.end}</span>
         </div>
@@ -76,7 +79,7 @@ import { education } from '../data/education';
     {projects.map((proj) => (
       <div class="item">
         <div class="head">
-          <h3><a href={proj.url} target="_blank" rel="noopener">{proj.name} ↗</a></h3>
+          <h3><a data-gc={`project-${slug(proj.name)}`} href={proj.url} target="_blank" rel="noopener">{proj.name} ↗</a></h3>
         </div>
         <p class="dim" style="margin:0.25rem 0 0;">{proj.description}</p>
         {proj.tags && proj.tags.length > 0 && (
@@ -92,7 +95,7 @@ import { education } from '../data/education';
     {contributions.map((repo) => (
       <div class="item">
         <div class="head">
-          <h3><a href={repo.url} target="_blank" rel="noopener">{repo.name} ↗</a></h3>
+          <h3><a data-gc={`contrib-${slug(repo.name)}`} href={repo.url} target="_blank" rel="noopener">{repo.name} ↗</a></h3>
         </div>
         <p class="dim" style="margin:0.25rem 0 0;">{repo.description}</p>
         {repo.tags && repo.tags.length > 0 && (
@@ -116,7 +119,7 @@ import { education } from '../data/education';
         </div>
         {p.links && p.links.length > 0 && (
           <div class="inline-links">
-            {p.links.map((l) => <a href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}
+            {p.links.map((l) => <a data-gc={`pub-${slug(p.title)}-${slug(l.label)}`} href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}
           </div>
         )}
       </div>
@@ -129,7 +132,7 @@ import { education } from '../data/education';
     {patents.map((pt) => (
       <div class="item">
         <div class="head">
-          <h3><a href={pt.url} target="_blank" rel="noopener">{pt.title} ↗</a></h3>
+          <h3><a data-gc={`patent-${slug(pt.title)}`} href={pt.url} target="_blank" rel="noopener">{pt.title} ↗</a></h3>
           <span class="meta">{pt.issued}</span>
         </div>
         <div class="faint mono" style="font-size:0.82rem;">{pt.number}</div>
@@ -143,7 +146,7 @@ import { education } from '../data/education';
     {talks.map((t) => (
       <div class="item">
         <div class="head">
-          <h3><a href={t.url} target="_blank" rel="noopener">{t.title} ↗</a></h3>
+          <h3><a data-gc={`talk-${slug(t.title)}`} href={t.url} target="_blank" rel="noopener">{t.title} ↗</a></h3>
           <span class="meta">{t.year}</span>
         </div>
         <div class="faint mono" style="font-size:0.82rem;">{t.venue} · {t.role}</div>
