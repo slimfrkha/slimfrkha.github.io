@@ -1,0 +1,185 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import avatar from '../assets/slim-frikha.jpg';
+import { site, skills, languages } from '../data/site';
+import { experience } from '../data/experience';
+import { projects, contributions } from '../data/projects';
+import { publications } from '../data/publications';
+import { patents } from '../data/patents';
+import { talks } from '../data/talks';
+import { education } from '../data/education';
+---
+
+<BaseLayout description={site.summary}>
+  <!-- Hero -->
+  <section class="hero" style="border-top:none;">
+    <div class="hero-grid">
+      <div class="hero-text">
+        <div class="role">{site.role}</div>
+        <h1>{site.name}</h1>
+        <div class="hero-meta faint mono">
+          <span>{site.affiliation}</span>
+          <span>·</span>
+          <span>{site.location}</span>
+          <span>·</span>
+          <span>{site.pronouns}</span>
+        </div>
+        <div class="link-row" style="margin-top:1.5rem;">
+          {site.links.map((l) => (
+            <a class="btn" href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>
+          ))}
+        </div>
+      </div>
+      <Image src={avatar} alt={site.name} width={360} class="avatar" />
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="reveal">
+    <div class="section-label">About</div>
+    {site.about.map((p) => <p class="dim" style="margin:0 0 0.9rem;">{p}</p>)}
+  </section>
+
+  <!-- Experience -->
+  <section id="experience" class="reveal">
+    <div class="section-label">Experience</div>
+    {experience.map((job) => (
+      <div class="item">
+        <div class="head">
+          <h3>
+            {job.role} ·{' '}
+            {job.companyUrl ? <a href={job.companyUrl} target="_blank" rel="noopener">{job.company}</a> : <span>{job.company}</span>}
+          </h3>
+          <span class="meta">{job.start} — {job.end}</span>
+        </div>
+        {job.location && <div class="faint mono" style="font-size:0.8rem;">{job.location}</div>}
+        {job.summary && <p class="dim" style="margin:0.45rem 0 0;">{job.summary}</p>}
+        {job.highlights && job.highlights.length > 0 && (
+          <ul>{job.highlights.map((h) => <li>{h}</li>)}</ul>
+        )}
+        {job.tech && job.tech.length > 0 && (
+          <div class="tags">{job.tech.map((t) => <span class="tag">{t}</span>)}</div>
+        )}
+      </div>
+    ))}
+  </section>
+
+  <!-- Open Source -->
+  <section id="open-source" class="reveal">
+    <div class="section-label">Open Source</div>
+
+    <div class="subhead">
+      <span>Projects</span>
+      <span class="subhead-note faint mono">original work</span>
+    </div>
+    {projects.map((proj) => (
+      <div class="item">
+        <div class="head">
+          <h3><a href={proj.url} target="_blank" rel="noopener">{proj.name} ↗</a></h3>
+        </div>
+        <p class="dim" style="margin:0.25rem 0 0;">{proj.description}</p>
+        {proj.tags && proj.tags.length > 0 && (
+          <div class="tags">{proj.tags.map((t) => <span class="tag">{t}</span>)}</div>
+        )}
+      </div>
+    ))}
+
+    <div class="subhead" style="margin-top:2.75rem;">
+      <span>Contributions</span>
+      <span class="subhead-note faint mono">upstream repos</span>
+    </div>
+    {contributions.map((repo) => (
+      <div class="item">
+        <div class="head">
+          <h3><a href={repo.url} target="_blank" rel="noopener">{repo.name} ↗</a></h3>
+        </div>
+        <p class="dim" style="margin:0.25rem 0 0;">{repo.description}</p>
+        {repo.tags && repo.tags.length > 0 && (
+          <div class="tags">{repo.tags.map((t) => <span class="tag">{t}</span>)}</div>
+        )}
+      </div>
+    ))}
+  </section>
+
+  <!-- Publications -->
+  <section id="publications" class="reveal">
+    <div class="section-label">Publications & Writing</div>
+    {publications.map((p) => (
+      <div class="item">
+        <div class="head">
+          <h3>{p.title}</h3>
+          <span class="meta">{p.year}</span>
+        </div>
+        <div class="faint mono" style="font-size:0.82rem;">
+          {p.venue}{p.role ? ` · ${p.role}` : ''}
+        </div>
+        {p.links && p.links.length > 0 && (
+          <div class="inline-links">
+            {p.links.map((l) => <a href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}
+          </div>
+        )}
+      </div>
+    ))}
+  </section>
+
+  <!-- Patents -->
+  <section id="patents" class="reveal">
+    <div class="section-label">Patents</div>
+    {patents.map((pt) => (
+      <div class="item">
+        <div class="head">
+          <h3><a href={pt.url} target="_blank" rel="noopener">{pt.title} ↗</a></h3>
+          <span class="meta">{pt.issued}</span>
+        </div>
+        <div class="faint mono" style="font-size:0.82rem;">{pt.number}</div>
+      </div>
+    ))}
+  </section>
+
+  <!-- Talks -->
+  <section id="talks" class="reveal">
+    <div class="section-label">Talks</div>
+    {talks.map((t) => (
+      <div class="item">
+        <div class="head">
+          <h3><a href={t.url} target="_blank" rel="noopener">{t.title} ↗</a></h3>
+          <span class="meta">{t.year}</span>
+        </div>
+        <div class="faint mono" style="font-size:0.82rem;">{t.venue} · {t.role}</div>
+      </div>
+    ))}
+  </section>
+
+  <!-- Education -->
+  <section id="education" class="reveal">
+    <div class="section-label">Education</div>
+    {education.map((e) => (
+      <div class="item">
+        <div class="head">
+          <h3>{e.school}</h3>
+          <span class="meta">{e.start} — {e.end}</span>
+        </div>
+        <div class="dim">{e.degree}</div>
+        {e.note && <p class="faint" style="margin:0.25rem 0 0; font-size:0.9rem;">{e.note}</p>}
+      </div>
+    ))}
+  </section>
+
+  <!-- Skills & Languages -->
+  <section id="skills" class="reveal">
+    <div class="section-label">Skills</div>
+    {skills.map((s) => (
+      <div class="skill-group">
+        <div class="skill-group-name mono">{s.group}</div>
+        <div class="tags">{s.items.map((i) => <span class="tag">{i}</span>)}</div>
+      </div>
+    ))}
+    <div class="skill-group">
+      <div class="skill-group-name mono">Languages</div>
+      <div class="tags">
+        {languages.map((l) => <span class="tag">{l.name} · {l.level}</span>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
