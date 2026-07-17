@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
-// User site served at the root: https://slimfrkha.github.io/
+// Served at the custom domain (apex). github.io redirects here.
 export default defineConfig({
-  site: 'https://slimfrkha.github.io',
+  site: 'https://slimfrikha.dev',
 });
