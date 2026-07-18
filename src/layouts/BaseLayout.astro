@@ -37,11 +37,17 @@ const analyticsHosts = [prodHost, `www.${prodHost}`];
       // This also keeps localhost/dev out of the stats (no allow_local needed);
       // to test tracking locally, temporarily add 'localhost' to analyticsHosts.
       if (analyticsHosts.includes(location.hostname)) {
+        // A ?ref= source can be lost when the visitor also arrives with a Referer
+        // header, which competes with it. Pin the ref as the referrer explicitly —
+        // the `referrer` setting takes precedence over document.referrer — so the
+        // source is recorded either way.
+        const ref = new URLSearchParams(location.search).get('ref');
+        const settings = { title: 'Home', ...(ref ? { referrer: ref } : {}) };
         const s = document.createElement('script');
         s.async = true;
         s.src = '//gc.zgo.at/count.js';
         s.dataset.goatcounter = 'https://slimfrikha.goatcounter.com/count';
-        s.dataset.goatcounterSettings = JSON.stringify({ title: 'Home' });
+        s.dataset.goatcounterSettings = JSON.stringify(settings);
         document.head.appendChild(s);
       }
     </script>
