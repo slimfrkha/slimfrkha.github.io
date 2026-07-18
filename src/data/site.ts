@@ -19,6 +19,7 @@ export const site = {
     { label: 'Hugging Face', url: 'https://huggingface.co/slimfrikha' },
     { label: 'LinkedIn', url: 'https://linkedin.com/in/slimfrikha' },
   ],
+  email: { user: 'slimfrikha.dev', domain: 'outlook.com' },
 } as const;
 
 // Technical skills, grouped for display. From the resume SKILLS section.
