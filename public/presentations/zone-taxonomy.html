@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zone Taxonomy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Theme tokens: Contentsquare-inspired palette (approximation). Swap hex values here to rebrand. */
+:root{
+  --navy:#14113B; --navy-2:#211C5C; --violet:#6C4CF5; --violet-2:#8E74FF; --lavender:#DCD3FF;
+  --mist:#F5F3FF; --ink:#1A1737; --muted:#5F5B80; --line:#E4E0F6;
+  --pink:#FF5C8A; --teal:#1FBFA0; --amber:#F5A623; --grey:#B9B6CC;
+  --stage:#0B0922;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--stage);font-family:var(--sans);color:var(--ink);overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center}
+.slide{position:absolute;inset:0;padding:52px 72px 64px;display:none;flex-direction:column;background:#fff;border-radius:6px;overflow:hidden}
+.slide.active{display:flex}
+.slide.dark{background:radial-gradient(1200px 700px at 85% 10%,var(--navy-2),var(--navy) 60%);color:#fff}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--violet)}
+.dark .kicker{color:var(--violet-2)}
+h1{font-size:76px;line-height:1.02;margin:0;font-weight:800;letter-spacing:-.02em}
+h2{font-size:38px;line-height:1.12;margin:8px 0 22px;font-weight:800;letter-spacing:-.015em}
+p,li{font-size:20px;line-height:1.45}
+.lead{font-size:24px;line-height:1.4;color:var(--muted);max-width:980px;margin:0 0 18px}
+.dark .lead{color:#CFC9F5}
+.muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{background:var(--mist);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+.card h3{margin:0 0 8px;font-size:21px}
+.card p{margin:0;font-size:17px;color:var(--muted)}
+.dark .card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+.dark .card p{color:#D6D1F7}
+.stat{font-size:54px;font-weight:800;color:var(--violet);line-height:1}
+.pill{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--lavender);color:var(--navy);font-size:14px;font-weight:600;margin:0 6px 8px 0}
+.pill b{color:var(--violet)}
+.fuse .pill{white-space:nowrap;font-size:13px;padding:5px 10px}
+.code{font-family:var(--mono);background:#100D30;color:#ECE8FF;border-radius:12px;padding:16px 18px;font-size:15px;line-height:1.55;white-space:pre}
+table.t{border-collapse:collapse;width:100%;font-size:17px}
+table.t th{text-align:left;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--line);padding:8px 10px}
+table.t td{border-bottom:1px solid var(--line);padding:9px 10px;vertical-align:top}
+.mono{font-family:var(--mono)}
+.c-v{color:var(--violet)} .c-p{color:var(--pink)} .c-t{color:var(--teal)} .c-a{color:var(--amber)} .c-g{color:#2FA36B}
+.foot{position:absolute;left:72px;right:72px;bottom:22px;display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.dark .foot{color:#A9A2E0}
+.brandbar{position:absolute;left:0;top:0;height:6px;width:100%;background:linear-gradient(90deg,var(--violet),var(--pink))}
+a.src{display:block;text-decoration:none;color:inherit;border:2px solid var(--line);transition:border-color .15s}
+a.src:hover{border-color:var(--violet)}
+a.src p{color:var(--muted)}
+svg text{font-family:var(--sans)}
+.step{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}
+.step .n{flex:0 0 34px;height:34px;border-radius:50%;background:var(--violet);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px}
+.step p{margin:2px 0 0;font-size:18px}
+.formula{font-family:var(--mono);font-size:17px;background:var(--mist);border-left:4px solid var(--violet);padding:10px 14px;border-radius:6px}
+/* chrome */
+#bar{position:fixed;left:0;bottom:0;height:4px;background:var(--violet);transition:width .25s}
+#count{position:fixed;right:16px;bottom:12px;color:#8E88C7;font:600 13px var(--sans)}
+#help{position:fixed;left:16px;bottom:12px;color:#6F69A8;font:12px var(--sans)}
+@media print{@page{size:1280px 720px;margin:0}html,body{overflow:visible;height:auto;background:#fff}#stage{position:static;transform:none!important;width:1280px;height:auto}.slide{display:flex!important;position:relative;height:720px;border-radius:0;break-after:page}#bar,#count,#help{display:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<section class="slide dark">
+  <div class="brandbar"></div>
+  <div style="margin-top:150px">
+    <div class="kicker">Semantic web understanding @ Contentsquare · 2018 – 2024</div>
+    <h1 style="margin-top:18px">Zone Taxonomy</h1>
+    <p class="lead" style="font-size:30px;margin-top:22px;color:#E3DEFF">Automatically naming the zones of any web page,<br>straight from its DOM.</p>
+  </div>
+  <div style="margin-top:auto;display:flex;gap:12px">
+    <span class="pill">DOM tree in</span><span class="pill">zone label per node out</span><span class="pill">served on Triton</span><span style="margin-left:auto;color:#CFC9F5;font-size:18px;align-self:center">Slim Frikha</span>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The product problem</div>
+  <h2>Every page is made of zones</h2>
+  <div class="grid2" style="grid-template-columns:1.15fr .85fr">
+    <svg viewBox="0 0 600 420" width="600" height="420" aria-label="Product page with zones">
+      <rect x="0" y="0" width="600" height="420" rx="14" fill="#FBFAFF" stroke="#E4E0F6"/>
+      <rect x="0" y="0" width="600" height="30" rx="14" fill="#EEEAFE"/>
+      <circle cx="20" cy="15" r="5" fill="#FF5C8A"/><circle cx="36" cy="15" r="5" fill="#F5A623"/><circle cx="52" cy="15" r="5" fill="#1FBFA0"/>
+      <g fill="#E9E6F7">
+        <rect x="24" y="48" width="70" height="28" rx="6"/><rect x="112" y="52" width="200" height="20" rx="4"/>
+        <rect x="330" y="48" width="180" height="28" rx="14"/><rect x="530" y="48" width="44" height="28" rx="6"/>
+        <rect x="24" y="100" width="260" height="210" rx="10"/>
+        <rect x="310" y="104" width="250" height="26" rx="4"/><rect x="310" y="146" width="110" height="30" rx="4"/>
+        <rect x="310" y="196" width="190" height="44" rx="22"/>
+        <rect x="24" y="330" width="536" height="34" rx="6"/><rect x="0" y="384" width="600" height="36"/>
+      </g>
+      <g fill="none" stroke="#6C4CF5" stroke-width="2.5" stroke-dasharray="6 4">
+        <rect x="20" y="44" width="78" height="36" rx="8"/><rect x="108" y="48" width="208" height="28" rx="6"/>
+        <rect x="326" y="44" width="188" height="36" rx="16"/><rect x="526" y="44" width="52" height="36" rx="8"/>
+        <rect x="20" y="96" width="268" height="218" rx="12"/><rect x="306" y="100" width="258" height="34" rx="6"/>
+        <rect x="306" y="142" width="118" height="38" rx="6"/><rect x="306" y="192" width="198" height="52" rx="24"/>
+        <rect x="20" y="326" width="544" height="42" rx="8"/><rect x="4" y="380" width="592" height="38" rx="6"/>
+      </g>
+      <g font-size="12" font-weight="700" fill="#fff">
+        <rect x="20" y="82" width="98" height="18" rx="4" fill="#6C4CF5"/><text x="26" y="95">cta_homepage</text>
+        <rect x="160" y="78" width="44" height="18" rx="4" fill="#6C4CF5"/><text x="166" y="91">menu</text>
+        <rect x="370" y="82" width="80" height="18" rx="4" fill="#6C4CF5"/><text x="376" y="95">search_bar</text>
+        <rect x="474" y="82" width="122" height="18" rx="4" fill="#FF5C8A"/><text x="480" y="95">cta_access_cart</text>
+        <rect x="96" y="200" width="118" height="18" rx="4" fill="#6C4CF5"/><text x="102" y="213">product_picture</text>
+        <rect x="440" y="108" width="106" height="18" rx="4" fill="#6C4CF5"/><text x="446" y="121">product_name</text>
+        <rect x="430" y="152" width="106" height="18" rx="4" fill="#FF5C8A"/><text x="436" y="165">product_price</text>
+        <rect x="370" y="248" width="128" height="18" rx="4" fill="#FF5C8A"/><text x="376" y="261">cta_add_to_cart</text>
+        <rect x="250" y="340" width="62" height="18" rx="4" fill="#6C4CF5"/><text x="256" y="353">reviews</text>
+        <rect x="270" y="392" width="56" height="18" rx="4" fill="#6C4CF5"/><text x="276" y="405">footer</text>
+      </g>
+    </svg>
+    <div>
+      <div class="card" style="margin-bottom:14px"><h3>A zoning = the flagged zones of a page</h3><p>Zones with a business meaning are flagged so they can be monitored: each gets its own metrics, and any automatic analysis can use them as page context.</p></div>
+      <div class="card" style="margin-bottom:14px"><h3>Each zone has a name and a type</h3>
+        <table class="t" style="font-size:15px;margin-top:6px"><tr><th>Name</th><th>Type</th></tr>
+        <tr><td class="mono">search-field__input</td><td class="mono c-v">search_bar</td></tr></table>
+        <p style="margin-top:8px">The name is free text chosen by whoever flags the zone. The type comes from a shared taxonomy.</p></div>
+      <div class="card" style="background:var(--navy);border-color:var(--navy)"><p style="color:#fff;font-size:18px"><b>Zone Taxonomy predicts the type</b> of every node of a page: the labels on the left.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Product problem</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The product problem</div>
+  <h2>Zoning by hand doesn't scale</h2>
+  <div style="display:grid;grid-template-columns:640px 1fr;gap:34px;align-items:start">
+    <div>
+      <svg viewBox="0 0 640 270" width="640" height="270" aria-label="Sketch of the zoning editor" style="display:block">
+        <defs><marker id="za" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#FF5C8A"/></marker></defs>
+        <rect x="0.5" y="0.5" width="639" height="269" rx="10" fill="#fff" stroke="#E4E0F6"/>
+        <path d="M0.5,10.5 a10,10 0 0 1 10,-10 h619 a10,10 0 0 1 10,10 v13 h-639 z" fill="#EEEAFE"/>
+        <circle cx="14" cy="12" r="4" fill="#FF5C8A"/><circle cx="27" cy="12" r="4" fill="#F5A623"/><circle cx="40" cy="12" r="4" fill="#1FBFA0"/>
+        <rect x="58" y="6" width="210" height="12" rx="6" fill="#fff"/><text x="66" y="15.5" font-size="9" fill="#77738F">shop.example.com/cart</text>
+        <rect x="14" y="34" width="44" height="20" rx="3" fill="#8E74FF" opacity=".75"/><text x="36" y="48" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">0.9%</text>
+        <rect x="70" y="34" width="230" height="20" rx="10" fill="#FF8FA8" opacity=".85"/><text x="185" y="48" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">14.5%</text>
+        <rect x="312" y="34" width="80" height="20" rx="3" fill="#8EC8FF" opacity=".9"/><text x="352" y="48" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">1.9%</text>
+        <rect x="404" y="34" width="34" height="20" rx="3" fill="#8EC8FF" opacity=".9"/>
+        <rect x="14" y="62" width="424" height="1" fill="#E4E0F6"/>
+        <text x="18" y="88" font-size="15" font-weight="800" fill="#1A1737">Shopping bag</text>
+        <rect x="18" y="98" width="120" height="5" rx="2.5" fill="#E9E6F7"/>
+        <rect x="18" y="114" width="96" height="30" rx="4" fill="#F5F3FF" stroke="#E4E0F6"/><rect x="122" y="114" width="96" height="30" rx="4" fill="#F5F3FF" stroke="#E4E0F6"/>
+        <rect x="292" y="80" width="146" height="70" rx="6" fill="#F8F7FC" stroke="#E4E0F6"/>
+        <rect x="302" y="90" width="70" height="5" rx="2.5" fill="#D9D5EC"/><rect x="302" y="104" width="126" height="1" fill="#E4E0F6"/>
+        <rect x="302" y="114" width="60" height="5" rx="2.5" fill="#D9D5EC"/><rect x="404" y="112" width="24" height="8" rx="2" fill="#1A1737"/>
+        <rect x="302" y="128" width="90" height="5" rx="2.5" fill="#E9E6F7"/>
+        <rect x="18" y="160" width="52" height="52" rx="4" fill="#E3F0DA"/>
+        <rect x="14" y="156" width="60" height="60" rx="5" fill="none" stroke="#FF5C8A" stroke-width="2.5"/>
+        <circle cx="14" cy="156" r="9" fill="#FF5C8A"/><text x="14" y="160" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">1</text>
+        <path d="M46,178 l0,16 l4,-4 l3,7 l3,-1.5 l-3,-7 l5.5,0 z" fill="#1A1737" stroke="#fff" stroke-width="1"/>
+        <rect x="82" y="166" width="90" height="6" rx="3" fill="#D9D5EC"/><rect x="82" y="180" width="130" height="5" rx="2.5" fill="#E9E6F7"/>
+        <rect x="82" y="200" width="60" height="5" rx="2.5" fill="#E9E6F7"/><rect x="250" y="166" width="24" height="7" rx="2" fill="#1A1737"/>
+        <rect x="292" y="166" width="146" height="34" rx="4" fill="#1F4E9E"/><text x="365" y="187" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Continue to checkout</text>
+        <rect x="14" y="226" width="424" height="1" fill="#E4E0F6"/>
+        <rect x="18" y="236" width="80" height="5" rx="2.5" fill="#E9E6F7"/><rect x="18" y="248" width="120" height="5" rx="2.5" fill="#E9E6F7"/>
+        <rect x="456" y="30" width="172" height="232" rx="8" fill="#FBFAFF" stroke="#E4E0F6"/>
+        <text x="468" y="50" font-size="12" font-weight="800" fill="#1A1737">Zones list</text><text x="614" y="50" text-anchor="end" font-size="12" fill="#77738F">×</text>
+        <g font-size="10.5" fill="#1A1737">
+          <text x="468" y="76">hnf-header__logo</text>
+          <text x="468" y="100">search-field__input</text>
+          <text x="468" y="124">Log in or sign up</text>
+          <text x="468" y="148">Wish list</text>
+          <text x="468" y="172">2 Shopping bag</text>
+          <text x="468" y="222">Continue to checkout</text>
+        </g>
+        <g fill="#B9B6CC"><circle cx="612" cy="73" r="1.5"/><circle cx="612" cy="97" r="1.5"/><circle cx="612" cy="121" r="1.5"/><circle cx="612" cy="145" r="1.5"/><circle cx="612" cy="169" r="1.5"/><circle cx="612" cy="219" r="1.5"/></g>
+        <rect x="462" y="182" width="160" height="22" rx="4" fill="#fff" stroke="#FF5C8A" stroke-width="2"/>
+        <text x="468" y="197" font-size="10.5" font-weight="700" fill="#1A1737">product_imageContainer</text>
+        <circle cx="456" cy="182" r="9" fill="#FF5C8A"/><text x="456" y="186" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">2</text>
+        <path d="M76,186 C200,250 380,240 446,196" fill="none" stroke="#FF5C8A" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#za)"/>
+      </svg>
+      <p class="muted" style="font-size:14px;margin:8px 0 0">Today in the zoning editor (sketch): open the page, click each element ①, give it a name in the zones list ②. Repeat for every zone, on every page.</p>
+    </div>
+    <div>
+      <p style="margin:0 0 10px;font-weight:700">Creating zonings is:</p>
+      <div class="step"><div class="n" style="background:var(--pink)">1</div><p><b>Too manual</b>: every zone is clicked and named by a person.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">2</div><p><b>Cumbersome and time-consuming</b>, page after page.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">3</div><p><b>A human bottleneck</b> for every feature that depends on zonings.</p></div>
+    </div>
+  </div>
+  <div style="margin-top:18px;background:var(--navy);border-radius:16px;padding:16px 24px;display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:20px;align-items:center">
+    <p style="margin:0;color:#fff;font-size:20px;line-height:1.35"><span class="kicker" style="color:var(--violet-2);font-size:12px;display:block">Goal</span>For a given web page, spot and classify the interesting zones, automatically.</p>
+    <div style="color:#E3DEFF;font-size:15px"><b style="color:#fff">auto-RZT pipeline</b><br>batch zoning of all retail projects, every two weeks</div>
+    <div style="color:#E3DEFF;font-size:15px"><b style="color:#fff">Labeling extension</b><br>live zone suggestions while the labeling team tags pages</div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Product problem</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The product problem</div>
+  <h2>A taxonomy that depends on the page type</h2>
+  <p class="lead">The zones you expect on a checkout page are not the ones you expect on a product page. The label space is defined per <b>page category</b>.</p>
+  <div style="display:flex;gap:40px;align-items:flex-start">
+    <div style="flex:0 0 300px">
+      <div class="stat">17</div><p class="muted" style="margin:4px 0 18px">page categories</p>
+      <div class="stat">71</div><p class="muted" style="margin:4px 0 18px">distinct zone labels</p>
+      <div class="stat">314</div><p class="muted" style="margin:4px 0 0">(page category, zone) pairs</p>
+    </div>
+    <div style="flex:1">
+      <p style="margin:0 0 10px;font-weight:700">Zones defined per page category</p>
+      <div>
+        <span class="pill">checkout <b>44</b></span><span class="pill">product <b>30</b></span><span class="pill">my_account <b>30</b></span>
+        <span class="pill">form <b>29</b></span><span class="pill">category <b>24</b></span><span class="pill">search <b>23</b></span>
+        <span class="pill">cart <b>22</b></span><span class="pill">other <b>17</b></span><span class="pill">home <b>13</b></span>
+        <span class="pill">store_locator <b>11</b></span><span class="pill">information_legals <b>11</b></span><span class="pill">press_news <b>10</b></span>
+        <span class="pill">help_support <b>10</b></span><span class="pill">favorites_wishlist <b>10</b></span><span class="pill">confirmation <b>10</b></span>
+        <span class="pill">careers_applications <b>10</b></span><span class="pill">brand_image <b>10</b></span>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <h3>Plus one background class everywhere: <span class="c-v">others</span></h3>
+        <p>Any node that is not a zone. Every page category's label list starts with it.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Product problem</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The product problem · Data</div>
+  <h2>The training set: an annotation campaign</h2>
+  <div style="display:grid;grid-template-columns:560px 1fr;gap:40px">
+    <div>
+      <div style="display:flex;gap:14px;margin-bottom:18px">
+        <div class="card" style="flex:1;border-left:5px solid var(--violet)">
+          <div class="kicker" style="font-size:12px">Phase 1 · Kick-start</div>
+          <h3 style="margin-top:6px">Data analysts</h3>
+          <p>Internal analysts annotated first, to kick-start the taxonomy and the first models.</p>
+        </div>
+        <div class="card" style="flex:1;border-left:5px solid var(--pink)">
+          <div class="kicker" style="font-size:12px;color:var(--pink)">Phase 2 · Scale</div>
+          <h3 style="margin-top:6px">Labelling company</h3>
+          <p>A labelling company then annotated at scale, same taxonomy.</p>
+        </div>
+      </div>
+      <p style="font-size:15px;margin:0 0 12px;color:var(--muted)">Rule: annotators tag the <b>biggest node that contains only the zone</b>. Each page is captured with its DOM (HTML, visibility, boxes) and a screenshot.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="card" style="padding:10px 14px"><div class="stat" style="font-size:32px">7,357</div><p>annotated pages</p></div>
+        <div class="card" style="padding:10px 14px"><div class="stat" style="font-size:32px">320</div><p>website domains (final)</p></div>
+        <div class="card" style="padding:10px 14px"><div class="stat" style="font-size:32px">~23</div><p>pages per domain</p></div>
+        <div class="card" style="padding:10px 14px"><div class="stat" style="font-size:32px;color:var(--teal)">4.7M</div><p>DOM nodes</p></div>
+        <div class="card" style="padding:10px 14px"><div class="stat" style="font-size:32px;color:var(--pink)">187k</div><p>labelled zones (4%)</p></div>
+        <div class="card" style="padding:10px 14px"><div class="stat" style="font-size:32px;color:var(--amber)">~640</div><p>nodes per page</p></div>
+      </div>
+    </div>
+    <div>
+      <p style="margin:0 0 4px;font-weight:700;font-size:17px">Pages per page category <span class="muted" style="font-weight:400">· labelled zones</span></p>
+      <svg id="pcchart" viewBox="0 0 560 410" width="560" height="410" aria-label="Pages per page category"></svg>
+      <p class="muted" style="font-size:13px;margin:0">Chart and node/zone counts: raw m2 extraction (327 domains), before training filters. Final dataset: 320 domains. Dataset versions: v0 Oct 2022, v1 Jan 2024.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Data</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The product problem · Data</div>
+  <h2>7,357 pages, but only 320 websites</h2>
+  <div style="display:grid;grid-template-columns:600px 1fr;gap:40px">
+    <div>
+      <svg id="domchart" viewBox="0 0 600 370" width="600" height="370" aria-label="Pages grouped by website"></svg>
+      <p class="muted" style="font-size:15px;margin:6px 0 0">Pages of one site share its templates: they differ only locally (content, a block or two). The big differences are between sites.</p>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:18px;text-align:center">
+        <div class="stat" style="font-size:46px">320 <span style="font-size:22px;color:var(--muted);font-weight:600">domains</span></div>
+        <p style="margin-top:6px">is the real size of the training set: ≈ 23 pages per domain</p>
+      </div>
+      <div class="step"><div class="n">1</div><p><b>Variability lives between websites.</b> Markup, CSS naming, language and layout are set per site.</p></div>
+      <div class="step"><div class="n">2</div><p><b>More pages of a known site add little.</b> More data points, but not much new variability.</p></div>
+      <div class="step"><div class="n">3</div><p><b>Split by domain.</b> If a site were in both train and validation, the model would be scored on templates it has memorised (leakage). Domains are assigned so each zone type keeps a ~75/25 train/validation balance.</p></div>
+      <div class="step"><div class="n">4</div><p><b>So validation measures the real task:</b> zoning websites the model has never seen.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Data variability</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The product problem</div>
+  <h2>Why it's hard</h2>
+  <div class="grid4" style="margin-top:6px">
+    <div class="card"><div class="stat">96%</div><h3 style="margin-top:12px">of nodes are background</h3><p>Only ~4% of nodes carry a zone label: a heavily imbalanced problem.</p></div>
+    <div class="card"><div class="stat" style="color:var(--pink)">320</div><h3 style="margin-top:12px">websites, not 7k pages</h3><p>Each site has its own markup, CSS naming and language. Pages of one site vary only locally.</p></div>
+    <div class="card"><div class="stat" style="color:var(--teal)">~640</div><h3 style="margin-top:12px">nodes per page</h3><p>On average; training pages have 20 to 5,000 visible nodes, serving accepts up to 10,000.</p></div>
+    <div class="card"><div class="stat" style="color:var(--amber)">⧉</div><h3 style="margin-top:12px">zones are nested</h3><p>One visual zone spans several nested nodes. Which one "is" the zone?</p></div>
+  </div>
+  <div style="margin-top:28px;display:flex;gap:28px;align-items:center">
+    <div class="code" style="flex:0 0 600px"><span class="c-g">&lt;div class="price-wrap"&gt;</span>        <span style="color:#FF8FB0">← annotated as product_price</span>
+  <span class="c-g">&lt;span class="price"&gt;</span>          <span style="color:#8E88C7">← same price, one level in</span>
+    <span class="c-g">&lt;b&gt;</span>100€<span class="c-g">&lt;/b&gt;</span>                 <span style="color:#8E88C7">← the text itself</span>
+  <span class="c-g">&lt;/span&gt;</span>
+<span class="c-g">&lt;/div&gt;</span></div>
+    <p class="lead" style="margin:0">All three nodes show the same price. The rule tags the biggest node holding only the zone, yet a model may answer one level in. This is the <b>granularity</b> problem; it comes back in the deep dive.</p>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Product problem</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The modeling solution · Design choices</div>
+  <h2>Two choices that shape the solution</h2>
+  <p style="margin:0 0 8px;font-weight:800;color:var(--violet);font-size:17px">1 · What should the model read?</p>
+  <div class="grid3" style="gap:16px"><div class="card" style="padding:14px 18px;"><h3 style="font-size:18px;margin:0 0 4px">Hand-crafted features</h3><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> simple, interpretable</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:var(--pink)">✗</b> tied to the label set, slow to explore</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:var(--pink)">✗</b> the problem outgrows the features</p></div><div class="card" style="padding:14px 18px;"><h3 style="font-size:18px;margin:0 0 4px">Computer vision on screenshots</h3><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> strong pretrained backbones</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> detection / segmentation models</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:var(--pink)">✗</b> rendering cost; zone boxes are already known</p></div><div class="card" style="padding:14px 18px;border:2px solid var(--violet);background:#fff"><span class="pill" style="float:right;margin:0;background:var(--violet);color:#fff;font-size:12px">chosen</span><h3 style="font-size:18px;margin:0 0 4px">The HTML itself, as text</h3><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> independent of the label set</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> no rendering needed</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:var(--pink)">✗</b> a model to craft from scratch</p></div>
+  </div>
+  <p style="margin:18px 0 8px;font-weight:800;color:var(--violet);font-size:17px">2 · What should it predict?</p>
+  <div class="grid2" style="gap:16px"><div class="card" style="padding:14px 18px;"><h3 style="font-size:18px;margin:0 0 4px">One zone at a time</h3><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> simpler modelling and training</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:var(--pink)">✗</b> no access to parents or neighbours</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:var(--pink)">✗</b> which snippet: with or without children? Labels differ from user annotations</p></div><div class="card" style="padding:14px 18px;border:2px solid var(--violet);background:#fff"><span class="pill" style="float:right;margin:0;background:var(--violet);color:#fff;font-size:12px">chosen</span><h3 style="font-size:18px;margin:0 0 4px">Every node of the page at once</h3><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> sees parents and children; each node keeps only its own HTML</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:#2FA36B">✓</b> training labels = user annotations</p><p style="font-size:15px;margin:4px 0 0;color:var(--ink)"><b style="color:var(--pink)">✗</b> page batching, dynamic tree graphs, long gradient paths</p></div>
+  </div>
+  <div style="margin-top:18px;background:var(--navy);border-radius:14px;padding:14px 22px;color:#fff;font-size:19px">→ Read each node's own HTML, and classify <b>all the nodes of the page together</b> along the DOM tree.</div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: design choices</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The modeling solution</div>
+  <h2>Node classification on a tree</h2>
+  <p class="lead">Input: the page's DOM tree (each node's own HTML + visibility) and its page category. Output: one label per node: a zone, or <span class="c-v">others</span>.</p>
+  <svg viewBox="0 0 1136 300" width="1136" height="300" aria-label="Pipeline">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6C4CF5"/></marker></defs>
+    <g font-size="15">
+      <rect x="0" y="70" width="170" height="150" rx="14" fill="#F5F3FF" stroke="#E4E0F6"/>
+      <text x="85" y="102" text-anchor="middle" font-weight="700" font-size="17">Page</text>
+      <circle cx="85" cy="135" r="9" fill="#B9B6CC"/><circle cx="55" cy="170" r="9" fill="#B9B6CC"/><circle cx="115" cy="170" r="9" fill="#B9B6CC"/><circle cx="115" cy="202" r="9" fill="#B9B6CC"/>
+      <path d="M85,144 L55,161 M85,144 L115,161 M115,179 L115,193" stroke="#B9B6CC" stroke-width="2"/>
+      <text x="85" y="248" text-anchor="middle" fill="#5F5B80" font-size="14">DOM tree</text>
+      <text x="85" y="266" text-anchor="middle" fill="#5F5B80" font-size="14">+ page category</text>
+
+      <g transform="translate(215,60)">
+        <rect width="190" height="170" rx="14" fill="#6C4CF5"/>
+        <text x="95" y="38" text-anchor="middle" fill="#fff" font-weight="800" font-size="34">1</text>
+        <text x="95" y="80" text-anchor="middle" fill="#fff" font-weight="700" font-size="18">Node encoder</text>
+        <text x="95" y="108" text-anchor="middle" fill="#E3DEFF">HTML, id, class,</text>
+        <text x="95" y="128" text-anchor="middle" fill="#E3DEFF">attributes, text</text>
+        <text x="95" y="152" text-anchor="middle" fill="#E3DEFF">→ 64-d per node</text>
+      </g>
+      <g transform="translate(445,60)">
+        <rect width="190" height="170" rx="14" fill="#5338D6"/>
+        <text x="95" y="38" text-anchor="middle" fill="#fff" font-weight="800" font-size="34">2</text>
+        <text x="95" y="80" text-anchor="middle" fill="#fff" font-weight="700" font-size="18">Tree context</text>
+        <text x="95" y="108" text-anchor="middle" fill="#E3DEFF">masked tree attention</text>
+        <text x="95" y="128" text-anchor="middle" fill="#E3DEFF">branch + siblings</text>
+        <text x="95" y="152" text-anchor="middle" fill="#E3DEFF">→ context per node</text>
+      </g>
+      <g transform="translate(675,60)">
+        <rect width="190" height="170" rx="14" fill="#3E28B0"/>
+        <text x="95" y="38" text-anchor="middle" fill="#fff" font-weight="800" font-size="34">3</text>
+        <text x="95" y="80" text-anchor="middle" fill="#fff" font-weight="700" font-size="16">Page-category head</text>
+        <text x="95" y="108" text-anchor="middle" fill="#E3DEFF">softmax over the</text>
+        <text x="95" y="128" text-anchor="middle" fill="#E3DEFF">zones of that</text>
+        <text x="95" y="152" text-anchor="middle" fill="#E3DEFF">page type</text>
+      </g>
+      <g transform="translate(905,60)">
+        <rect width="190" height="170" rx="14" fill="#14113B"/>
+        <text x="95" y="38" text-anchor="middle" fill="#fff" font-weight="800" font-size="34">4</text>
+        <text x="95" y="80" text-anchor="middle" fill="#fff" font-weight="700" font-size="18">Grouping</text>
+        <text x="95" y="108" text-anchor="middle" fill="#E3DEFF">one node per</text>
+        <text x="95" y="128" text-anchor="middle" fill="#E3DEFF">nested cluster</text>
+        <text x="95" y="152" text-anchor="middle" fill="#E3DEFF">→ final zones</text>
+      </g>
+      <path d="M172,145 L210,145" stroke="#6C4CF5" stroke-width="3" marker-end="url(#ar)"/>
+      <path d="M407,145 L440,145" stroke="#6C4CF5" stroke-width="3" marker-end="url(#ar)"/>
+      <path d="M637,145 L670,145" stroke="#6C4CF5" stroke-width="3" marker-end="url(#ar)"/>
+      <path d="M867,145 L900,145" stroke="#6C4CF5" stroke-width="3" marker-end="url(#ar)"/>
+      <text x="310" y="262" text-anchor="middle" fill="#5F5B80" font-size="14">what the node says</text>
+      <text x="540" y="262" text-anchor="middle" fill="#5F5B80" font-size="14">where the node sits</text>
+      <text x="770" y="262" text-anchor="middle" fill="#5F5B80" font-size="14">what this page type allows</text>
+      <text x="1000" y="262" text-anchor="middle" fill="#5F5B80" font-size="14">one answer per zone</text>
+    </g>
+  </svg>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: overview</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 1 Node encoder</div>
+  <h2>What the model reads from a node</h2>
+  <p class="lead">Each node's own HTML snippet (without its children) is split into five signals.</p>
+  <div class="code" style="font-size:19px;margin-bottom:22px"><span class="c-v">&lt;a</span> class="<span class="c-p">btn add-to-cart</span>" id="<span class="c-t">atc-btn</span>" title="<span class="c-a">Add to cart</span>" role="<span class="c-a">button</span>"<span class="c-v">&gt;</span><span class="c-g">Add to cart</span><span class="c-v">&lt;/a&gt;</span></div>
+  <table class="t">
+    <tr><th>Signal</th><th>What is extracted</th><th>Tokens</th><th>Length</th></tr>
+    <tr><td><b class="c-v">Markup</b></td><td class="mono">&lt;a class="btn add-to-cart" id="atc-btn" … role="button"&gt;&lt;/a&gt;</td><td>characters</td><td>400</td></tr>
+    <tr><td><b class="c-t">id</b></td><td class="mono">atc-btn</td><td>characters</td><td>20</td></tr>
+    <tr><td><b class="c-p">class</b></td><td class="mono">btn add-to-cart</td><td>characters</td><td>80</td></tr>
+    <tr><td><b class="c-a">Attributes</b></td><td class="mono">Add to cart|button <span class="muted" style="font-family:var(--sans)">(title, alt, role, type, itemprop, name, label, placeholder, aria-label)</span></td><td>characters</td><td>25</td></tr>
+    <tr><td><b class="c-g">Displayed text</b></td><td class="mono">Add to cart <span class="muted" style="font-family:var(--sans)">→ multilingual BERT word-piece embeddings (frozen), text flavour</span></td><td>word pieces</td><td>20 × 768</td></tr>
+  </table>
+  <p class="muted" style="font-size:16px;margin-top:14px">Characters come from a 102-symbol vocabulary (printable ASCII + padding + unknown). Lengths were fixed from the observed length distributions.</p>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: inputs</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 1 Node encoder</div>
+  <h2>One signal, end to end: a character CNN</h2>
+  <svg id="cnnchart" viewBox="0 0 1136 392" width="1136" height="392" aria-label="Character CNN for one signal"></svg>
+  <div style="display:grid;grid-template-columns:.85fr 1.45fr;gap:24px;margin-top:6px;align-items:center">
+    <p style="font-size:15px;margin:0;color:var(--muted)">Same recipe for every signal. Markup and attributes use <b>k = 3, 5, 7, 9</b>; id, class and text use <b>k = 3, 5</b>. Text starts from 768-d BERT word-piece vectors instead of 8-d character embeddings.</p>
+    <div class="fuse" style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+      <span class="pill" style="margin:0;border:2px solid var(--violet);background:#fff">markup 64</span>
+      <span class="pill" style="margin:0;border:2px solid var(--teal);background:#fff">id 64</span>
+      <span class="pill" style="margin:0;border:2px solid var(--pink);background:#fff">class 64</span>
+      <span class="pill" style="margin:0;border:2px solid var(--amber);background:#fff">attributes 64</span>
+      <span class="pill" style="margin:0;border:2px solid #2FA36B;background:#fff">text 64</span>
+      <b class="c-v">→</b><span class="pill" style="margin:0;background:var(--navy);color:#fff">dense · dropout 0.3</span><b class="c-v">→</b><span class="pill" style="margin:0;background:var(--violet);color:#fff">64-d local vector</span>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: node encoder</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 2 Tree context · first version</div>
+  <h2>A node is understood by its surroundings</h2>
+  <div class="grid2" style="grid-template-columns:1.1fr .9fr">
+    <div>
+      <svg viewBox="0 0 640 380" width="640" height="380" aria-label="Bidirectional TreeLSTM">
+      <defs>
+        <marker id="up" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6C4CF5"/></marker>
+        <marker id="dn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#FF5C8A"/></marker>
+      </defs>
+      <g font-size="15">
+        <text x="150" y="24" text-anchor="middle" font-weight="700" fill="#6C4CF5">Pass 1 · leaves → root</text>
+        <text x="490" y="24" text-anchor="middle" font-weight="700" fill="#FF5C8A">Pass 2 · root → leaves</text>
+        <g>
+          <path d="M150,90 L80,180 M150,90 L220,180 M220,180 L220,280" stroke="#E4E0F6" stroke-width="3"/>
+          <path d="M84,172 L144,96" stroke="#6C4CF5" stroke-width="3" marker-end="url(#up)"/>
+          <path d="M216,172 L156,96" stroke="#6C4CF5" stroke-width="3" marker-end="url(#up)"/>
+          <path d="M220,272 L220,190" stroke="#6C4CF5" stroke-width="3" marker-end="url(#up)"/>
+          <circle cx="150" cy="80" r="20" fill="#14113B"/><text x="150" y="86" text-anchor="middle" fill="#fff" font-size="13">h=2</text>
+          <circle cx="80" cy="190" r="20" fill="#6C4CF5"/><text x="80" y="196" text-anchor="middle" fill="#fff" font-size="13">h=0</text>
+          <circle cx="220" cy="190" r="20" fill="#5338D6"/><text x="220" y="196" text-anchor="middle" fill="#fff" font-size="13">h=1</text>
+          <circle cx="220" cy="290" r="20" fill="#6C4CF5"/><text x="220" y="296" text-anchor="middle" fill="#fff" font-size="13">h=0</text>
+          <text x="150" y="345" text-anchor="middle" fill="#5F5B80">children summed into parent</text>
+          <text x="150" y="366" text-anchor="middle" fill="#5F5B80">"what is inside me"</text>
+        </g>
+        <g transform="translate(340,0)">
+          <path d="M150,90 L80,180 M150,90 L220,180 M220,180 L220,280" stroke="#E4E0F6" stroke-width="3"/>
+          <path d="M144,98 L86,172" stroke="#FF5C8A" stroke-width="3" marker-end="url(#dn)"/>
+          <path d="M156,98 L214,172" stroke="#FF5C8A" stroke-width="3" marker-end="url(#dn)"/>
+          <path d="M220,208 L220,268" stroke="#FF5C8A" stroke-width="3" marker-end="url(#dn)"/>
+          <circle cx="150" cy="80" r="20" fill="#14113B"/>
+          <circle cx="80" cy="190" r="20" fill="#FF5C8A"/>
+          <circle cx="220" cy="190" r="20" fill="#E04878"/>
+          <circle cx="220" cy="290" r="20" fill="#FF5C8A"/>
+          <text x="150" y="345" text-anchor="middle" fill="#5F5B80">parent context pushed down</text>
+          <text x="150" y="366" text-anchor="middle" fill="#5F5B80">"where do I sit"</text>
+        </g>
+      </g>
+    </svg>
+      <p style="font-size:13px;margin:6px 20px 0 0;color:var(--muted)">Based on the Child-Sum Tree-LSTM: K. S. Tai, R. Socher, C. D. Manning, <i>Improved Semantic Representations From Tree-Structured Long Short-Term Memory Networks</i>, ACL 2015, <a href="https://arxiv.org/html/1503.00075v3" target="_blank" rel="noopener" style="color:var(--violet)">arXiv:1503.00075</a>.</p>
+    </div>
+    <div>
+      <p style="margin-top:0"><b>Child-sum TreeLSTM</b>: each node combines its own local vector with the summed states of its children, using forget gates per child.</p>
+      <div class="step"><div class="n">↑</div><p>Upward pass computes nodes <b>level by level by height</b>: all leaves at once, then their parents, … up to the root.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">↓</div><p>Downward pass runs a second TreeLSTM from the root, fed with the upward states, with a residual memory link.</p></div>
+      <div class="formula" style="margin-top:14px">node = [ local (64) ‖ h↑ + h↓ (64) ] → 128-d</div>
+      <p class="muted" style="font-size:16px;margin-top:12px">A price node now knows it sits under a product block, next to a title and a button.</p>
+      <p style="font-size:15px;margin-top:10px;color:var(--violet)"><b>First version.</b> Replaced by masked tree attention: next slide.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: tree context</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 2 Tree context · current version</div>
+  <h2>From TreeLSTM to tree attention</h2>
+  <div style="display:grid;grid-template-columns:620px 1fr;gap:34px">
+    <svg id="attnchart" viewBox="0 0 620 488" width="620" height="488" aria-label="Branch and sibling attention"></svg>
+    <div>
+      <p style="margin:0 0 12px;font-size:17px">The TreeLSTM runs <b>one step per tree level, twice</b>. Masked attention updates <b>every node at once</b>: parallel and much faster on GPU. Context is still taken in two directions, as two attention tracks:</p>
+      <div class="step"><div class="n">↕</div><p style="font-size:16px"><b class="c-v">Branch track (vertical).</b> A node attends to its ancestors and descendants within a hop limit: <b>6 hops in the real model</b> (1 in this illustration). Farther ones are masked; they don't help the decision.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">↔</div><p style="font-size:16px"><b class="c-p">Sibling track (horizontal).</b> A node attends to the other children of its parent: what sits next to it.</p></div>
+      <div class="formula" style="font-size:15px;margin:6px 0 10px">softmax( QKᵀ/√d + M ) V &nbsp;·&nbsp; M = 0 kept, −∞ masked</div>
+      <p style="font-size:15px;margin:0 0 6px;color:var(--muted)"><b style="color:var(--ink)">Real model: two stacked layers</b> bring in first-degree cousins: in layer 1 the grandparent gathers its descendants, in layer 2 the node reads its grandparent. Heavily inspired by TrENC, not identical (±6-hop branch, 2 layers).</p>
+      <p style="font-size:13px;margin:8px 0 0;color:var(--muted)">Based on TrENC: Li et al., <i>Extracting Shopping Interest-Related Product Types from the Web</i>, arXiv:2305.14549 (2023): path + sibling attention on DOM trees.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: tree attention</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 3 Decision</div>
+  <h2>One head per page category</h2>
+  <div class="grid2" style="grid-template-columns:1fr 1fr;align-items:center">
+    <svg viewBox="0 0 560 360" width="560" height="360" aria-label="Heads">
+      <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B9B6CC"/></marker></defs>
+      <g font-size="15">
+        <rect x="0" y="150" width="130" height="60" rx="10" fill="#14113B"/><text x="65" y="186" text-anchor="middle" fill="#fff" font-weight="700">node vector</text>
+        <path d="M132,180 L250,50" stroke="#B9B6CC" stroke-width="2" marker-end="url(#ar3)"/>
+        <path d="M132,180 L250,130" stroke="#6C4CF5" stroke-width="4" marker-end="url(#ar3)"/>
+        <path d="M132,180 L250,210" stroke="#B9B6CC" stroke-width="2" marker-end="url(#ar3)"/>
+        <path d="M132,180 L250,290" stroke="#B9B6CC" stroke-width="2" marker-end="url(#ar3)"/>
+        <rect x="256" y="28" width="300" height="44" rx="8" fill="#F5F3FF" stroke="#E4E0F6"/><text x="270" y="56">cart head · others, add_promo_code, …</text>
+        <rect x="256" y="106" width="300" height="50" rx="8" fill="#6C4CF5"/><text x="270" y="128" fill="#fff" font-weight="700">product head</text><text x="270" y="147" fill="#E3DEFF" font-size="13">others, product_price, cta_add_to_cart, …</text>
+        <rect x="256" y="188" width="300" height="44" rx="8" fill="#F5F3FF" stroke="#E4E0F6"/><text x="270" y="216">checkout head · others, card_number, …</text>
+        <rect x="256" y="268" width="300" height="44" rx="8" fill="#F5F3FF" stroke="#E4E0F6"/><text x="270" y="296">… one per page category</text>
+      </g>
+    </svg>
+    <div>
+      <p style="margin-top:0">Each head is small: <span class="mono">Linear → sigmoid → Linear → softmax</span> over that page category's zone list.</p>
+      <p>The page category is an <b>input</b>: it selects which head answers, so a product page can never be given a checkout-only zone.</p>
+      <p>All page categories share the encoder and the tree-context block, so knowledge transfers across page types.</p>
+      <p>In training, the loss is <b>masked per head</b>: each node only trains the head of its own page category.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: decision</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · Training</div>
+  <h2>Learning when 96% of nodes are background</h2>
+  <div class="grid3">
+    <div class="card"><h3>Focal loss</h3><div class="formula" style="background:#fff;margin:10px 0">−y · log p · (1 − p)<sup>γ</sup>, γ = 2</div><p>Easy, confidently-correct nodes (most "others") contribute little; the hard ones drive learning.</p></div>
+    <div class="card"><h3>Prior-aware start</h3><div class="formula" style="background:#fff;margin:10px 0">softmax(bias) = others share</div><p>Output biases are initialised so the untrained model already predicts "others" at its true frequency, so no wasted early epochs.</p></div>
+    <div class="card"><h3>Page-category weights</h3><div class="formula" style="background:#fff;margin:10px 0">w = max count / count</div><p>Page types with fewer training nodes weigh more in the loss.</p></div>
+  </div>
+  <div class="grid2" style="margin-top:24px">
+    <div class="card"><h3>Invisible nodes give context, not loss</h3><p>Fully invisible subtrees are removed. Remaining invisible nodes still pass through the tree model but are masked out of the loss and metrics.</p></div>
+    <div class="card"><h3>One page per step, 16 accumulated</h3><p>Adam (lr 3·10⁻³), learning rate halved on plateau, early stopping on validation F0.5.</p></div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Modeling: training</span></div>
+</section>
+
+<section class="slide dark">
+  <div class="brandbar"></div>
+  <div class="kicker">Modeling deep dive · Granularity</div>
+  <h2>"Nearly right" is a real situation</h2>
+  <div class="grid2" style="grid-template-columns:.9fr 1.1fr;align-items:center">
+    <svg viewBox="0 0 480 360" width="480" height="360" aria-label="Nested price nodes">
+      <g font-size="15">
+        <rect x="30" y="20" width="420" height="320" rx="14" fill="rgba(255,255,255,.05)" stroke="#FF5C8A" stroke-width="2"/>
+        <text x="50" y="50" fill="#CFC9F5" font-family="JetBrains Mono, monospace">div.price-wrap</text>
+        <rect x="70" y="70" width="340" height="230" rx="12" fill="rgba(108,76,245,.25)" stroke="#8E74FF" stroke-width="2"/>
+        <text x="90" y="100" fill="#fff" font-family="JetBrains Mono, monospace">span.price</text>
+        <rect x="312" y="32" width="126" height="24" rx="5" fill="#FF5C8A"/><text x="324" y="49" fill="#fff" font-size="13" font-weight="700">annotated here</text>
+        <rect x="110" y="130" width="260" height="140" rx="10" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.3)"/>
+        <text x="130" y="160" fill="#CFC9F5" font-family="JetBrains Mono, monospace">b</text>
+        <text x="240" y="222" text-anchor="middle" fill="#fff" font-size="40" font-weight="800">100€</text>
+      </g>
+    </svg>
+    <div>
+      <p class="lead" style="margin-top:0;font-size:21px">One price on screen, three nested nodes, one annotation: by rule, the biggest node holding only the zone. If the model answers one level in, it still found the zone.</p>
+      <p style="color:#E3DEFF;margin:0 0 10px;font-size:18px">The near-zone idea is used in three places:</p>
+      <div class="card" style="margin-bottom:10px"><h3>Training · near-zone soft labels</h3><p>Don't punish the model hard for the levels next to a zone; teach how likely each one is to be the zone.</p></div>
+      <div class="card" style="margin-bottom:10px"><h3>Evaluation · near-zone tolerance</h3><p>Score the zone as found when the prediction lands one level off, and count each zone only once.</p></div>
+      <div class="card"><h3>Serving · grouping</h3><p>Return one node per nested cluster, with the others listed as synonyms.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Granularity</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Granularity · Training</div>
+  <h2>Near-zone soft labels</h2>
+  <div style="display:grid;grid-template-columns:470px 1fr;gap:30px">
+    <div>
+      <svg viewBox="0 0 470 330" width="470" height="330" aria-label="Rings around a labelled node">
+        <g font-size="13">
+          <path d="M200,40 L80,130 M200,40 L200,130 M80,130 L80,210 M200,130 L200,210 M200,210 L200,290" stroke="#D9D5EC" stroke-width="3"/>
+          <rect x="140" y="22" width="120" height="36" rx="18" fill="#FFF4E0" stroke="#F5A623" stroke-width="2.5" stroke-dasharray="5 3"/>
+          <text x="200" y="45" text-anchor="middle" font-weight="700">div.product</text>
+          <rect x="30" y="114" width="100" height="32" rx="16" fill="#EEEDF4" stroke="#B9B6CC"/><text x="80" y="135" text-anchor="middle">div.gallery</text>
+          <rect x="40" y="194" width="80" height="32" rx="16" fill="#EEEDF4" stroke="#B9B6CC"/><text x="80" y="215" text-anchor="middle">img</text>
+          <rect x="137" y="114" width="126" height="32" rx="16" fill="#6C4CF5"/><text x="200" y="135" text-anchor="middle" fill="#fff" font-weight="800">div.price-wrap</text>
+          <rect x="137" y="194" width="126" height="32" rx="16" fill="#DCD3FF" stroke="#6C4CF5" stroke-width="2.5"/><text x="200" y="215" text-anchor="middle" font-weight="700">span.price</text>
+          <rect x="160" y="274" width="80" height="32" rx="16" fill="#DCD3FF" stroke="#6C4CF5" stroke-width="2.5"/><text x="200" y="295" text-anchor="middle" font-weight="700">b</text>
+          <text x="274" y="128" fill="#6C4CF5" font-weight="800">labelled: product_price</text>
+          <text x="274" y="144" fill="#5F5B80" font-size="12">by rule: the biggest zone node</text>
+          <text x="274" y="208" fill="#3E28B0" font-weight="700">near-certitude · d = 1</text>
+          <text x="274" y="224" fill="#5F5B80" font-size="12">target 99% price · weight 0.97</text>
+          <text x="252" y="288" fill="#3E28B0" font-weight="700">near-certitude · d = 2</text>
+          <text x="252" y="304" fill="#5F5B80" font-size="12">target 97% price · weight 0.87</text>
+          <text x="270" y="36" fill="#B07205" font-weight="700">incertitude · d = 1</text>
+          <text x="270" y="52" fill="#5F5B80" font-size="12">target 76% others · weight 0.03</text>
+          <text x="10" y="252" fill="#77738F" font-size="12">sibling branch: not a neighbour</text>
+          <text x="10" y="268" fill="#77738F" font-size="12">→ plain "others", full weight</text>
+        </g>
+      </svg>
+      <div style="display:flex;gap:16px;font-size:14px;margin-top:2px">
+        <span><b class="c-v">■</b> near-certitude: single-child chain, ≤ 6 hops</span>
+        <span><b class="c-a">■</b> incertitude: ≤ 10 hops, ≤ 2 extra branches</span>
+      </div>
+    </div>
+    <div>
+      <p style="margin:0 0 10px;font-size:18px">Around every labelled node, its <b>ancestors and descendants</b> that are labelled "others" get a soft target and a loss weight, both functions of the tree distance <i>d</i>:</p>
+      <div class="formula" style="margin-bottom:12px">s(d) = tanh(d² / 10<sup>1.5</sup>)</div>
+      <table class="t" style="font-size:16px">
+        <tr><th>Node</th><th>Soft target</th><th>Loss weight</th></tr>
+        <tr><td><b class="c-v">near-certitude</b><br><span class="muted">likely the same zone</span></td><td>zone: 0.25(1−s)+0.75<br><span class="muted">99% at d=1 · 80% at d=6</span></td><td>1 − s</td></tr>
+        <tr><td><b class="c-a">incertitude</b><br><span class="muted">ambiguous</span></td><td>others: 0.25·s+0.75<br><span class="muted">76% at d=1 · 95% at d=6</span></td><td>s</td></tr>
+        <tr><td>labelled node · far nodes</td><td>one-hot</td><td>1</td></tr>
+      </table>
+      <svg id="wchart" viewBox="0 0 560 170" width="560" height="170" style="margin-top:8px" aria-label="Loss weight vs distance"></svg>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Granularity: training</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Granularity · Evaluation</div>
+  <h2>An evaluation that measures "zone found"</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px">
+    <div>
+      <div class="step"><div class="n">1</div><p><b>Split by website.</b> No domain is in both train and validation (no template leakage), so the score is about <i>unseen websites</i>. Each (page, zone) pair keeps a ≈75/25 split (±15%).</p></div>
+      <div class="step"><div class="n">2</div><p><b>Group predictions</b> like serving does: one node per same-label nested cluster (≤ 8 hops, ≤ 2 extra branches).</p></div>
+      <div class="step"><div class="n">3</div><p><b>Near-zone swap.</b> A zone predicted "others" whose neighbour (≤ 3 hops) was predicted with that zone swaps labels with it: the zone counts as found once.</p></div>
+      <div class="step"><div class="n">4</div><p><b>Score F0.5</b> per zone (precision-weighted), averaged over the zones of each page category, then over page categories. This score selects checkpoints and stops training.</p></div>
+    </div>
+    <div>
+      <svg viewBox="0 0 520 420" width="520" height="420" aria-label="Evaluation cases">
+        <g font-size="13">
+          <text x="0" y="18" font-weight="800" font-size="15">Case A · prediction one level off</text>
+          <g transform="translate(0,30)">
+            <rect x="0" y="0" width="230" height="150" rx="12" fill="#F5F3FF" stroke="#E4E0F6"/>
+            <text x="14" y="22" fill="#5F5B80" font-weight="600">plain scoring</text>
+            <rect x="20" y="36" width="190" height="38" rx="8" fill="#fff" stroke="#B9B6CC"/><text x="30" y="52">div.price-wrap</text><text x="30" y="68" fill="#FF5C8A" font-weight="700">GT price · pred others ✗</text>
+            <rect x="20" y="92" width="190" height="38" rx="8" fill="#fff" stroke="#B9B6CC"/><text x="30" y="108">span.price</text><text x="30" y="124" fill="#FF5C8A" font-weight="700">GT others · pred price ✗</text>
+            <path d="M115,74 L115,92" stroke="#B9B6CC" stroke-width="2"/>
+            <text x="250" y="80" font-size="22" fill="#6C4CF5">→</text>
+            <rect x="285" y="0" width="230" height="150" rx="12" fill="#F5F3FF" stroke="#6C4CF5"/>
+            <text x="299" y="22" fill="#3E28B0" font-weight="600">after near-zone swap</text>
+            <rect x="305" y="36" width="190" height="38" rx="8" fill="#fff" stroke="#6C4CF5"/><text x="315" y="52">div.price-wrap</text><text x="315" y="68" fill="#2FA36B" font-weight="700">GT others · pred others ✓</text>
+            <rect x="305" y="92" width="190" height="38" rx="8" fill="#fff" stroke="#6C4CF5"/><text x="315" y="108">span.price</text><text x="315" y="124" fill="#2FA36B" font-weight="700">GT price · pred price ✓</text>
+            <path d="M400,74 L400,92" stroke="#6C4CF5" stroke-width="2"/>
+          </g>
+          <text x="0" y="214" fill="#5F5B80">1 miss + 1 false alarm becomes 1 hit.</text>
+
+          <text x="0" y="252" font-weight="800" font-size="15">Case B · the zone predicted on three levels</text>
+          <g transform="translate(0,264)">
+            <rect x="0" y="0" width="230" height="120" rx="12" fill="#F5F3FF" stroke="#E4E0F6"/>
+            <text x="14" y="22" fill="#5F5B80" font-weight="600">raw predictions</text>
+            <text x="20" y="48">div.price-wrap  price 0.81</text>
+            <text x="20" y="72">span.price      price 0.62</text>
+            <text x="20" y="96">b               price 0.55</text>
+            <text x="250" y="66" font-size="22" fill="#6C4CF5">→</text>
+            <rect x="285" y="0" width="230" height="120" rx="12" fill="#F5F3FF" stroke="#6C4CF5"/>
+            <text x="299" y="22" fill="#3E28B0" font-weight="600">after grouping</text>
+            <text x="305" y="48" fill="#2FA36B" font-weight="700">div.price-wrap  price ✓</text>
+            <text x="305" y="72" fill="#77738F">span.price      others</text>
+            <text x="305" y="96" fill="#77738F">b               others</text>
+          </g>
+          <text x="0" y="410" fill="#5F5B80">The zone is counted once: no duplicate false alarms.</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Granularity: evaluation</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Evaluation · first iteration</div>
+  <h2>First results on unseen websites</h2>
+  <div style="display:grid;grid-template-columns:400px 1fr;gap:40px">
+    <div>
+      <div class="card" style="margin-bottom:14px"><div class="stat">76%</div><p style="margin-top:6px"><b style="color:var(--ink)">custom macro F0.5</b> on validation websites <span class="muted">(96% on training pages)</span></p></div>
+      <div class="card" style="margin-bottom:14px"><div class="stat" style="color:var(--teal)">83.1%</div><p style="margin-top:6px"><b style="color:var(--ink)">custom macro precision</b></p></div>
+      <p class="muted" style="font-size:14px;margin:0">First dataset: ~400 pages · ~200 websites · 5 page categories · 29 zone types.</p>
+    </div>
+    <div>
+      <p style="margin:0 0 14px;font-weight:700">F0.5 varies a lot across the 29 zone types</p><div style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:12px"><div style="flex:0 0 300px;height:14px;background:#EEEDF4;border-radius:7px"><div style="width:95%;height:14px;border-radius:7px;background:var(--violet)"></div></div><b style="font-size:18px;color:var(--violet)">≈ 95%</b></div><div style="margin-top:8px"><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">add-to-cart CTA</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">breadcrumb · category</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">search bar · cart</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">first name · account creation</span></div></div><div style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:12px"><div style="flex:0 0 300px;height:14px;background:#EEEDF4;border-radius:7px"><div style="width:90%;height:14px;border-radius:7px;background:var(--violet-2)"></div></div><b style="font-size:18px;color:var(--violet-2)">≈ 90%</b></div><div style="margin-top:8px"><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">search bar · category</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">product picture · category</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">surname · account creation</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">search bar · home</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">breadcrumb · product</span><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">search bar · product</span></div></div><div style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:12px"><div style="flex:0 0 300px;height:14px;background:#EEEDF4;border-radius:7px"><div style="width:20%;height:14px;border-radius:7px;background:var(--pink)"></div></div><b style="font-size:18px;color:var(--pink)">down to ≈ 20%</b></div><div style="margin-top:8px"><span class="pill" style="margin:0 6px 6px 0;font-size:13px;background:#fff;border:1px solid var(--line)">rare zone types</span></div></div>
+      <div class="card" style="margin-top:6px;padding:14px 18px;background:#fff">
+        <div class="kicker" style="font-size:12px;margin-bottom:6px">How the scores are computed (validation nodes)</div>
+        <div class="mono" style="font-size:14px;line-height:1.75;color:var(--ink)">
+          per zone type z: &nbsp;P<sub>z</sub> = TP/(TP+FP) &nbsp;·&nbsp; R<sub>z</sub> = TP/(TP+FN)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F0.5<sub>z</sub> = 1.25·P<sub>z</sub>·R<sub>z</sub> / (0.25·P<sub>z</sub> + R<sub>z</sub>)<br>
+          per page category c: &nbsp;F0.5<sub>c</sub> = mean<sub>z∈Z<sub>c</sub></sub> F0.5<sub>z</sub> &nbsp;·&nbsp; P<sub>c</sub> = mean<sub>z∈Z<sub>c</sub></sub> P<sub>z</sub><br>
+          custom macro: &nbsp;<b>F0.5 = mean<sub>c</sub> F0.5<sub>c</sub></b> &nbsp;·&nbsp; <b>precision = mean<sub>c</sub> P<sub>c</sub></b>
+        </div>
+        <p style="font-size:13px;margin-top:6px;color:var(--muted)">Z<sub>c</sub> = zone types of page category c, <i>others</i> excluded, with support &gt; 0. β = 0.5 weighs precision more than recall.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Evaluation: first results</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">From prediction to product</div>
+  <h2>Serving: one answer per zone</h2>
+  <div style="display:grid;grid-template-columns:420px 1fr;gap:28px">
+    <div>
+      <div class="step"><div class="n">1</div><p>Drop fully invisible subtrees; keep each node's own HTML.</p></div>
+      <div class="step"><div class="n">2</div><p>Vectorize, run the model, take the page category's head.</p></div>
+      <div class="step"><div class="n">3</div><p><b>Group</b> same-label nested clusters: keep the most confident node; the others become its <span class="mono">prediction_synonyms</span>.</p></div>
+      <div class="step"><div class="n">4</div><p>Return the labelled nodes with their confidence, keyed by the caller's node ids (cs_path or xpath).</p></div>
+      <div class="code" style="font-size:13px;padding:12px 14px;margin-top:6px">POST /v2/models/zone_taxonomy/infer
+DOM tree + page category  →  zones</div>
+    </div>
+    <div>
+      <p style="margin:0 0 10px;font-weight:700">In the labeling Chrome extension</p>
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="flex:0 0 168px"><svg viewBox="0 0 168 186" width="168" height="186" aria-label="Sketch of the Zone Taxonomy extension panel" style="display:block">
+          <rect x="0.5" y="0.5" width="167" height="185" rx="8" fill="#ECEBF2" stroke="#D9D5EC"/>
+          <path d="M0.5,8.5 a8,8 0 0 1 8,-8 h151 a8,8 0 0 1 8,8 v22 h-167 z" fill="#14113B"/>
+          <text x="12" y="20" font-size="10" font-weight="800" fill="#fff" letter-spacing=".08em">ZONE TAXONOMY</text>
+          <circle cx="152" cy="15" r="8" fill="#FF5C8A"/><text x="152" y="19" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">1</text>
+          <text x="26" y="62" font-size="10" fill="#5F5B80">Page type</text>
+          <rect x="78" y="50" width="80" height="18" rx="4" fill="#fff" stroke="#B9B6CC"/>
+          <text x="85" y="63" font-size="10.5" font-weight="700" fill="#1A1737">Cart</text><text x="150" y="63" text-anchor="end" font-size="9" fill="#5F5B80">▾</text>
+          <circle cx="13" cy="59" r="8" fill="#FF5C8A"/><text x="13" y="63" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">2</text>
+          <rect x="26" y="86" width="132" height="24" rx="5" fill="#6C4CF5"/>
+          <text x="92" y="102" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">Launch Zone Taxonomy</text>
+          <circle cx="13" cy="98" r="8" fill="#FF5C8A"/><text x="13" y="102" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">3</text>
+          <text x="26" y="140" font-size="10" fill="#5F5B80">Display labels</text>
+          <rect x="128" y="130" width="30" height="14" rx="7" fill="#6C4CF5"/><circle cx="151" cy="137" r="5" fill="#fff"/>
+          <rect x="0.5" y="162" width="167" height="23.5" fill="#14113B"/><path d="M0.5,162 h167" stroke="#14113B"/>
+        </svg>
+          <p class="muted" style="font-size:13px;margin:6px 0 0">pick the page type, launch, display labels</p></div>
+        <div><svg viewBox="0 0 506 212" width="506" height="212" aria-label="Sketch of predicted zones drawn on a cart page" style="display:block">
+          <rect x="0.5" y="0.5" width="505" height="211" rx="8" fill="#fff" stroke="#E4E0F6"/>
+          <path d="M0.5,8.5 a8,8 0 0 1 8,-8 h489 a8,8 0 0 1 8,8 v9 h-505 z" fill="#EEEAFE"/>
+          <circle cx="11" cy="9" r="3" fill="#FF5C8A"/><circle cx="21" cy="9" r="3" fill="#F5A623"/><circle cx="31" cy="9" r="3" fill="#1FBFA0"/>
+          <rect x="44" y="4" width="160" height="10" rx="5" fill="#fff"/><text x="51" y="12" font-size="7.5" fill="#77738F">shop.example.com/cart</text>
+          <rect x="0.5" y="18" width="505" height="24" fill="#1A1737"/>
+          <rect x="12" y="24" width="48" height="12" rx="2" fill="#fff" opacity=".9"/>
+          <rect x="170" y="24" width="170" height="12" rx="6" fill="#fff"/>
+          <rect x="430" y="24" width="28" height="12" rx="2" fill="#4A4670"/><rect x="466" y="24" width="28" height="12" rx="2" fill="#4A4670"/>
+          <path d="M150,58 h206" stroke="#D9D5EC" stroke-width="2"/>
+          <g fill="#fff" stroke="#B9B6CC" stroke-width="1.5"><circle cx="150" cy="58" r="6"/><circle cx="201" cy="58" r="6"/><circle cx="253" cy="58" r="6"/><circle cx="304" cy="58" r="6"/><circle cx="356" cy="58" r="6"/></g>
+          <circle cx="150" cy="58" r="6" fill="#1A1737"/>
+          <text x="150" y="80" font-size="11" font-weight="800" fill="#1A1737">My cart</text>
+          <rect x="150" y="88" width="250" height="12" fill="#F1EFF8"/>
+          <rect x="146" y="104" width="258" height="64" rx="3" fill="#F7E3F5" stroke="#C84FBF" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <rect x="152" y="110" width="66" height="52" rx="2" fill="#5A2D6E"/>
+          <text x="185" y="133" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">Product picture</text>
+          <text x="185" y="146" text-anchor="middle" font-size="9.5" font-weight="800" fill="#fff">94.8%</text>
+          <rect x="226" y="114" width="90" height="6" rx="3" fill="#D9D5EC"/><rect x="226" y="128" width="70" height="5" rx="2.5" fill="#E9E6F7"/>
+          <rect x="226" y="140" width="110" height="5" rx="2.5" fill="#E9E6F7"/><rect x="360" y="114" width="34" height="7" rx="2" fill="#D64545"/>
+          <rect x="150" y="176" width="250" height="1" fill="#E4E0F6"/>
+          <rect x="300" y="184" width="54" height="7" rx="2" fill="#D64545"/><rect x="362" y="182" width="38" height="12" rx="3" fill="#C8D44A"/>
+          <path d="M218,104 L420,40 M218,168 L420,196" stroke="#C84FBF" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>
+          <rect x="420" y="40" width="78" height="156" rx="6" fill="#F7E3F5" stroke="#C84FBF" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <rect x="428" y="66" width="62" height="104" rx="3" fill="#5A2D6E"/>
+          <text x="459" y="112" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">Product</text>
+          <text x="459" y="124" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">picture</text>
+          <text x="459" y="142" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">94.8%</text>
+        </svg>
+          <p class="muted" style="font-size:13px;margin:6px 0 0">predicted zones drawn on the live page, with confidence ("Product picture 94.8%") · sketch</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Serving</span></div>
+</section>
+
+<section class="slide dark">
+  <div class="brandbar"></div>
+  <div class="kicker">Recap</div>
+  <h2>Zone Taxonomy in four ideas</h2>
+  <div class="grid4" style="margin-top:10px">
+    <div class="card"><div class="stat" style="color:var(--violet-2)">1</div><h3 style="margin-top:10px">Read every node</h3><p>Character CNNs over markup, id, class, attributes, plus text.</p></div>
+    <div class="card"><div class="stat" style="color:var(--violet-2)">2</div><h3 style="margin-top:10px">Use the whole tree</h3><p>Masked tree attention along branches and siblings: what's inside, where it sits.</p></div>
+    <div class="card"><div class="stat" style="color:var(--violet-2)">3</div><h3 style="margin-top:10px">Respect the page type</h3><p>One head per page category, one shared backbone.</p></div>
+    <div class="card"><div class="stat" style="color:var(--pink)">4</div><h3 style="margin-top:10px">Near-zone aware</h3><p>Soft labels to train, tolerant scoring to evaluate, grouping to serve.</p></div>
+  </div>
+  <p class="lead" style="margin-top:40px;color:#E3DEFF">Trained on 320 websites, measured on sites it has never seen: DOM tree in, one confident answer per zone out.</p>
+  <div class="foot"><span>Zone Taxonomy</span><span>Thank you · questions</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Sources</div>
+  <h2>To go further</h2>
+  <div class="grid2" style="gap:24px;margin-top:4px">
+    <a class="card src" href="https://www.youtube.com/watch?v=QIfmJHyQIlY" target="_blank" rel="noopener">
+      <div class="kicker" style="font-size:12px">Talk · video</div>
+      <h3 style="margin-top:6px">Web page Tree Node Classification with Deep Learning</h3>
+      <p>Slim Frikha · Deep Learning Paris Meetup (Paris Machine Learning Applications Group), 5 July 2022</p>
+      <p class="mono" style="margin-top:10px;color:var(--violet);font-size:14px">youtube.com/watch?v=QIfmJHyQIlY</p>
+    </a>
+    <a class="card src" href="https://patents.google.com/patent/US11741186" target="_blank" rel="noopener">
+      <div class="kicker" style="font-size:12px">Patent · US 11,741,186 B1</div>
+      <h3 style="margin-top:6px">Determining zone types of a webpage</h3>
+      <p>ContentSquare SAS · inventors Slim Frikha, Mohamed-Amine Baatout · filed 29 Jul 2022, granted 29 Aug 2023</p>
+      <p class="mono" style="margin-top:10px;color:var(--violet);font-size:14px">patents.google.com/patent/US11741186</p>
+    </a>
+  </div>
+  <div class="card" style="margin-top:24px;background:#fff">
+    <div class="kicker" style="font-size:12px">Also referenced</div>
+    <p style="margin-top:6px;color:var(--ink)">Tree-LSTM (first tree-context version): K. S. Tai, R. Socher, C. D. Manning, <i>Improved Semantic Representations From Tree-Structured Long Short-Term Memory Networks</i>, ACL 2015, <a href="https://arxiv.org/html/1503.00075v3" target="_blank" rel="noopener" style="color:var(--violet)">arXiv:1503.00075</a>.</p>
+    <p style="margin-top:6px;color:var(--ink)">Tree attention design: Y. Li, C. Lockard, P. Shiralkar, C. Zhang, <i>Extracting Shopping Interest-Related Product Types from the Web</i>, <a href="https://arxiv.org/abs/2305.14549" target="_blank" rel="noopener" style="color:var(--violet)">arXiv:2305.14549</a> (2023).</p>
+  </div>
+  <div class="foot"><span>Zone Taxonomy</span><span>Sources</span></div>
+</section>
+
+
+
+
+
+</div>
+
+<div id="bar"></div>
+<div id="count"></div>
+<div id="help">← → navigate · F fullscreen</div>
+
+<script>
+(function(){
+  var svg=document.getElementById('wchart');
+  if(svg){
+    var D=10,s=function(d){return Math.tanh(d*d/Math.pow(D,1.5));};
+    var x0=48,x1=540,y0=124,y1=14,X=function(d){return x0+(x1-x0)*d/D;},Y=function(v){return y0-(y0-y1)*v;};
+    var nc=[],inc=[];
+    for(var d=1;d<=10;d++){ if(d<=6) nc.push(X(d)+','+Y(1-s(d))); inc.push(X(d)+','+Y(s(d))); }
+    var h='<line x1="'+x0+'" y1="'+y0+'" x2="'+x1+'" y2="'+y0+'" stroke="#B9B6CC"/>'+
+          '<line x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="#B9B6CC"/>';
+    for(var k=0;k<=10;k+=2) h+='<text x="'+X(k)+'" y="'+(y0+18)+'" text-anchor="middle" font-size="12" fill="#5F5B80">'+k+'</text>';
+    h+='<text x="'+(x0-8)+'" y="'+(y1+4)+'" text-anchor="end" font-size="12" fill="#5F5B80">1</text><text x="'+(x0-8)+'" y="'+(y0+4)+'" text-anchor="end" font-size="12" fill="#5F5B80">0</text>';
+    h+='<polyline points="'+nc.join(' ')+'" fill="none" stroke="#6C4CF5" stroke-width="3"/>';
+    h+='<polyline points="'+inc.join(' ')+'" fill="none" stroke="#F5A623" stroke-width="3"/>';
+    h+='<text x="'+X(2.4)+'" y="'+Y(0.93)+'" font-size="13" fill="#6C4CF5" font-weight="700">near-certitude weight</text>';
+    h+='<text x="'+X(6.3)+'" y="'+Y(0.55)+'" font-size="13" fill="#B07205" font-weight="700">incertitude weight</text>';
+    h+='<text x="'+x1+'" y="'+(y0+36)+'" text-anchor="end" font-size="12" fill="#5F5B80">tree distance d to the labelled node</text>';
+    svg.innerHTML=h;
+  }
+
+  var pc=document.getElementById('pcchart');
+  if(pc){
+    var rows=[['my_account',1246,13128],['category',1067,87465],['checkout',861,9197],['form',608,6635],
+      ['help_support',522,4121],['information_legals',503,3954],['product',465,10205],['home',339,6866],
+      ['search',295,30786],['cart',285,5558],['confirmation',266,1830],['brand_image',264,1998],
+      ['store_locator',262,2210],['press_news',178,1357],['favorites_wishlist',147,1292],
+      ['careers_applications',39,284],['other',10,70]];
+    var lx=150,maxW=290,rh=23.5,g='';
+    rows.forEach(function(r,k){
+      var y=6+k*rh,w=Math.max(2,maxW*r[1]/1246);
+      g+='<text x="'+(lx-8)+'" y="'+(y+13)+'" text-anchor="end" font-size="12.5" fill="#1A1737">'+r[0]+'</text>';
+      g+='<rect x="'+lx+'" y="'+y+'" width="'+w+'" height="16" rx="4" fill="'+(k<1?'#6C4CF5':'#8E74FF')+'"/>';
+      g+='<text x="'+(lx+w+6)+'" y="'+(y+13)+'" font-size="12.5" font-weight="700" fill="#3E28B0">'+r[1].toLocaleString('en-US')+'</text>';
+      g+='<text x="555" y="'+(y+13)+'" text-anchor="end" font-size="12" fill="#5F5B80">'+r[2].toLocaleString('en-US')+'</text>';
+    });
+    pc.innerHTML=g;
+  }
+
+  var dc=document.getElementById('domchart');
+  if(dc){
+    var sites=[['site A','#6C4CF5',0],['site B','#FF5C8A',1],['site C','#1FBFA0',2],['site D','#F5A623',3],['site E','#3E28B0',4]];
+    var pos=[[0,0],[205,0],[410,0],[0,190],[205,190]];
+    function page(x,y,col,lay,v){
+      var s='<rect x="'+x+'" y="'+y+'" width="76" height="64" rx="5" fill="#fff" stroke="'+col+'" stroke-width="1.5"/>';
+      s+='<rect x="'+(x+4)+'" y="'+(y+4)+'" width="68" height="7" rx="2" fill="'+col+'" opacity=".85"/>';
+      var f='fill="'+col+'" opacity=".35"';
+      if(lay===0){ s+='<rect x="'+(x+4)+'" y="'+(y+15)+'" width="30" height="30" rx="2" '+f+'/>';
+        for(var i=0;i<4;i++) s+='<rect x="'+(x+38)+'" y="'+(y+16+i*8)+'" width="'+(34-((v+i)%3)*7)+'" height="4" rx="2" '+f+'/>';
+        s+='<rect x="'+(x+38)+'" y="'+(y+50)+'" width="24" height="9" rx="4" fill="'+col+'" opacity=".8"/>'; }
+      if(lay===1){ for(var r=0;r<2;r++) for(var c=0;c<3;c++) if(!(v===2&&r===1&&c===2)) s+='<rect x="'+(x+4+c*23)+'" y="'+(y+15+r*24)+'" width="20" height="20" rx="2" '+f+'/>'; }
+      if(lay===2){ s+='<rect x="'+(x+4)+'" y="'+(y+15)+'" width="68" height="18" rx="2" '+f+'/>';
+        for(var i=0;i<3;i++) s+='<rect x="'+(x+4)+'" y="'+(y+38+i*8)+'" width="'+(68-((v*2+i)%4)*10)+'" height="4" rx="2" '+f+'/>'; }
+      if(lay===3){ s+='<rect x="'+(x+4)+'" y="'+(y+15)+'" width="16" height="44" rx="2" '+f+'/>';
+        for(var i=0;i<5;i++) s+='<rect x="'+(x+24)+'" y="'+(y+16+i*9)+'" width="'+(48-((v+2*i)%3)*9)+'" height="5" rx="2" '+f+'/>'; }
+      if(lay===4){ s+='<rect x="'+(x+18)+'" y="'+(y+15)+'" width="40" height="22" rx="2" '+f+'/>';
+        s+='<rect x="'+(x+14)+'" y="'+(y+41)+'" width="'+(48-(v%2)*12)+'" height="5" rx="2" '+f+'/>';
+        s+='<rect x="'+(x+26)+'" y="'+(y+50)+'" width="24" height="9" rx="4" fill="'+col+'" opacity=".8"/>'; }
+      return s;
+    }
+    var h='';
+    sites.forEach(function(st,k){
+      var bx=pos[k][0],by=pos[k][1];
+      h+='<rect x="'+bx+'" y="'+by+'" width="190" height="176" rx="14" fill="#F5F3FF" stroke="#E4E0F6"/>';
+      h+='<text x="'+(bx+14)+'" y="'+(by+24)+'" font-size="14" font-weight="700" fill="'+st[1]+'">'+st[0]+'</text>';
+      h+='<text x="'+(bx+176)+'" y="'+(by+24)+'" text-anchor="end" font-size="12" fill="#5F5B80">~23 pages</text>';
+      for(var r=0;r<2;r++) for(var c=0;c<2;c++) h+=page(bx+14+c*86,by+36+r*70,st[1],st[2],r*2+c);
+    });
+    h+='<rect x="410" y="190" width="190" height="176" rx="14" fill="#14113B"/>';
+    h+='<text x="505" y="262" text-anchor="middle" font-size="40" font-weight="800" fill="#fff">× 320</text>';
+    h+='<text x="505" y="292" text-anchor="middle" font-size="14" fill="#CFC9F5">website domains</text>';
+    h+='<text x="505" y="312" text-anchor="middle" font-size="14" fill="#CFC9F5">= real sample size</text>';
+    dc.innerHTML=h;
+  }
+
+  var cc=document.getElementById('cnnchart');
+  if(cc){
+    var V='#6C4CF5',ink='#1A1737',mut='#5F5B80',bc=['#6C4CF5','#8E74FF','#FF5C8A','#1FBFA0'],ks=[3,5,7,9];
+    var h='<defs><marker id="ca" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8E88C7"/></marker></defs>';
+    function txt(x,y,s,o){o=o||{};return '<text x="'+x+'" y="'+y+'" font-size="'+(o.fs||13)+'"'+(o.a?' text-anchor="'+o.a+'"':'')+' font-weight="'+(o.w||400)+'" fill="'+(o.c||ink)+'">'+s+'</text>';}
+    function arr(x1,y1,x2,y2){return '<path d="M'+x1+','+y1+' L'+x2+','+y2+'" stroke="#8E88C7" stroke-width="1.8" fill="none" marker-end="url(#ca)"/>';}
+    h+=txt(10,16,'1 · chars → 8-d',{w:700,c:V});
+    h+=txt(196,16,'2 · one branch per window width k',{w:700,c:V});
+    h+=txt(600,16,'3 · max-pool',{w:700,c:V})+txt(690,16,'4 · concat',{w:700,c:V})+txt(810,16,'5 · compress',{w:700,c:V});
+    var chars=['A','d','d','␣','t','o','␣','c','a','r','t','|','b','u'];
+    var shades=['#EDE8FF','#DCD3FF','#C4B5FF','#A894FF','#8E74FF'];
+    chars.forEach(function(ch,i){
+      var y=30+i*22;
+      h+='<rect x="10" y="'+y+'" width="30" height="20" rx="4" fill="#F5F3FF" stroke="#DCD3FF"/>';
+      h+=txt(25,y+15,ch,{a:'middle',fs:13,w:600});
+      for(var j=0;j<8;j++) h+='<rect x="'+(66+j*10)+'" y="'+y+'" width="9" height="20" rx="1.5" fill="'+shades[(i*7+j*3+i*j)%5]+'"/>';
+    });
+    h+=txt(10,348,'"Add to cart|button"',{c:ink,fs:12,w:600});
+    h+=txt(10,364,'padded to 25 → 25 × 8',{c:mut,fs:12});
+    h+=txt(10,380,'k-window slides along it',{c:'#FF5C8A',fs:12,w:600});
+    h+='<rect x="62" y="'+(30+7*22-3)+'" width="88" height="'+(3*22+2)+'" rx="5" fill="none" stroke="#FF5C8A" stroke-width="2" stroke-dasharray="5 3"/>';
+    h+='<rect x="64" y="'+(30+7*22-20)+'" width="40" height="15" rx="3" fill="#FF5C8A"/>'+txt(84,30+7*22-9,'k = 3',{a:'middle',c:'#fff',w:700,fs:11});
+    var cy=[62,148,234,320];
+    ks.forEach(function(k,r){
+      var c=cy[r],col=bc[r];
+      h+=arr(152,186,192,c);
+      h+=txt(198,c+5,'k = '+k,{w:800,c:col,fs:15});
+      if(r===3) h+=txt(296,c+46,'each block: Conv1d (width k, 32 filters) · BatchNorm · LeakyReLU · residual (+) on blocks 2 and 3',{c:mut,fs:11.5});
+      for(var bI=0;bI<3;bI++){
+        var x=252+bI*92;
+        h+='<rect x="'+x+'" y="'+(c-19)+'" width="76" height="38" rx="7" fill="#fff" stroke="'+col+'" stroke-width="2"/>';
+        h+=txt(x+38,c-3,'conv '+k,{a:'middle',w:700,fs:12.5})+txt(x+38,c+12,'BN · LReLU',{a:'middle',c:mut,fs:11});
+        if(bI<2) h+=arr(x+77,c,x+91,c);
+        if(bI>0) h+='<path d="M'+(x-8)+','+(c-19)+' Q'+(x+38)+','+(c-40)+' '+(x+84)+','+(c-19)+'" fill="none" stroke="'+col+'" stroke-width="1.4" stroke-dasharray="3 3"/>'+txt(x+38,c-30,'+',{a:'middle',c:col,w:800,fs:12});
+      }
+      h+=arr(529,c,543,c);
+      for(var yy=0;yy<5;yy++) for(var xx=0;xx<8;xx++) h+='<rect x="'+(548+xx*6)+'" y="'+(c-16+yy*6.6)+'" width="5" height="5.6" fill="'+col+'" opacity="'+(0.15+((xx*3+yy*5+r)%7)/8)+'"/>';
+      h+=txt(572,c+28,'25 × 32',{a:'middle',c:mut,fs:11});
+      h+=arr(598,c,628,c)+txt(613,c-6,'max',{a:'middle',c:mut,fs:11});
+      for(var q=0;q<4;q++) h+='<rect x="'+(632+q*9)+'" y="'+(c-6)+'" width="8" height="12" rx="1.5" fill="'+col+'"/>';
+      h+=txt(650,c+22,'32',{a:'middle',c:mut,fs:11});
+      h+='<path d="M670,'+c+' C690,'+c+' 690,'+(140+r*30+15)+' 706,'+(140+r*30+15)+'" stroke="'+col+'" stroke-width="1.8" fill="none"/>';
+    });
+    ks.forEach(function(k,r){ h+='<rect x="708" y="'+(140+r*30)+'" width="26" height="30" fill="'+bc[r]+'"/>'; });
+    h+='<rect x="708" y="140" width="26" height="120" fill="none" stroke="#14113B" stroke-width="1.5"/>';
+    h+=txt(721,280,'128',{a:'middle',w:700,fs:13})+txt(721,296,'4 × 32',{a:'middle',c:mut,fs:11});
+    h+=arr(738,200,796,200);
+    h+='<rect x="800" y="150" width="140" height="100" rx="12" fill="#14113B"/>';
+    h+=txt(870,180,'dense 128 → 64',{a:'middle',c:'#fff',w:700,fs:14})+txt(870,202,'BatchNorm · LReLU',{a:'middle',c:'#CFC9F5',fs:12})+txt(870,222,'dropout 0.5',{a:'middle',c:'#CFC9F5',fs:12});
+    h+=arr(942,200,966,200);
+    for(var q=0;q<8;q++) h+='<rect x="970" y="'+(144+q*14)+'" width="22" height="12" rx="2" fill="#F5A623" opacity="'+(0.45+(q%3)*0.25)+'"/>';
+    h+=txt(981,274,'64-d',{a:'middle',w:800,fs:14,c:'#B07205'})+txt(981,291,'attributes',{a:'middle',c:mut,fs:12})+txt(981,306,'vector',{a:'middle',c:mut,fs:12});
+    h+='<rect x="1010" y="40" width="126" height="118" rx="10" fill="#F5F3FF" stroke="#E4E0F6"/>';
+    h+=txt(1022,62,'Max over',{w:700,fs:12.5})+txt(1022,78,'positions =',{w:700,fs:12.5});
+    h+=txt(1022,98,'"does this',{c:mut,fs:12})+txt(1022,113,'pattern appear',{c:mut,fs:12})+txt(1022,128,'anywhere?"',{c:mut,fs:12})+txt(1022,146,'position-invariant',{c:V,fs:11.5,w:600});
+    cc.innerHTML=h;
+  }
+
+  var ac=document.getElementById('attnchart');
+  if(ac){
+    var names=['body','header','logo','search','main','div.price-wrap','span.price','button'];
+    var par=[-1,0,1,1,0,4,5,4];
+    var P=[[310,22],[160,88],[85,152],[235,152],[460,88],[400,152],[400,214],[540,152]];
+    var F=5, VI='#6C4CF5', PK='#FF5C8A';
+    function anc(i){var a=[];while(par[i]>=0){i=par[i];a.push(i);}return a;}
+    var H=1;
+    function isBranch(i,j){var a=anc(i).indexOf(j),b=anc(j).indexOf(i);return i===j||(a>=0&&a<H)||(b>=0&&b<H);}
+    function isSib(i,j){return i===j||(par[i]>=0&&par[i]===par[j]);}
+    var h='';
+    for(var i=1;i<8;i++){
+      var on=isBranch(F,i)&&isBranch(F,par[i]);
+      h+='<path d="M'+P[par[i]][0]+','+(P[par[i]][1]+12)+' L'+P[i][0]+','+(P[i][1]-12)+'" stroke="'+(on?VI:'#DDD9EE')+'" stroke-width="'+(on?3.5:2.5)+'"/>';
+    }
+    h+='<path d="M'+(P[F][0]+60)+','+(P[F][1]+4)+' Q'+((P[F][0]+P[7][0])/2)+','+(P[F][1]+40)+' '+(P[7][0]-34)+','+(P[7][1]+6)+'" fill="none" stroke="'+PK+'" stroke-width="2.5" stroke-dasharray="6 4"/>';
+    names.forEach(function(n,i){
+      var fill='#EEEDF4',stroke='#C9C6DA',tc='#1A1737';
+      if(i===F){fill='#14113B';stroke='#14113B';tc='#fff';}
+      else if(isBranch(F,i)){fill='#DCD3FF';stroke=VI;}
+      else if(isSib(F,i)){fill='#FFE0EA';stroke=PK;}
+      var cousin=(i===2||i===3);
+      var w=n.length*7.4+40;
+      h+='<rect x="'+(P[i][0]-w/2)+'" y="'+(P[i][1]-12)+'" width="'+w+'" height="24" rx="12" fill="'+(cousin?'#DDF6F0':fill)+'" stroke="'+(cousin?'#1FBFA0':stroke)+'" stroke-width="2"'+(cousin?' stroke-dasharray="4 3"':'')+'/>';
+      h+='<text x="'+(P[i][0]-w/2+11)+'" y="'+(P[i][1]+5)+'" font-size="12" font-weight="800" fill="'+(i===F?'#B9A8FF':'#8E88C7')+'">'+i+'</text>';
+      h+='<text x="'+(P[i][0]-w/2+26)+'" y="'+(P[i][1]+5)+'" font-size="12.5" font-weight="600" fill="'+tc+'">'+n+'</text>';
+    });
+    h+='<text x="0" y="246" font-size="12" fill="#5F5B80">Illustration, <tspan font-weight="800" fill="#14113B">hop = 1</tspan> · node 5: <tspan fill="'+VI+'" font-weight="700">branch</tspan> sees 4, 6 (0 is 2 hops up → masked) · <tspan fill="'+PK+'" font-weight="700">sibling</tspan> sees 7</text>';
+    h+='<text x="0" y="263" font-size="12" fill="#5F5B80"><tspan font-weight="800" fill="#14113B">Real model, hop = 6</tspan>, 2 layers: <tspan fill="#0E9C80" font-weight="700">cousins</tspan> 2, 3 reach node 5 via body (0)</text>';
+    function grid(x0,y0,title,col,fn){
+      var cs=17,s='<text x="'+x0+'" y="'+(y0-30)+'" font-size="14" font-weight="800" fill="'+col+'">'+title+'</text>';
+      for(var k=0;k<8;k++){
+        s+='<text x="'+(x0+18+k*cs+cs/2)+'" y="'+(y0-6)+'" text-anchor="middle" font-size="11" fill="#5F5B80">'+k+'</text>';
+        s+='<text x="'+(x0+8)+'" y="'+(y0+k*cs+12)+'" text-anchor="middle" font-size="11" fill="'+(k===F?'#14113B':'#5F5B80')+'" font-weight="'+(k===F?800:400)+'">'+k+'</text>';
+      }
+      for(var r=0;r<8;r++) for(var c=0;c<8;c++){
+        var ok=fn(r,c);
+        s+='<rect x="'+(x0+18+c*cs)+'" y="'+(y0+r*cs)+'" width="'+(cs-2)+'" height="'+(cs-2)+'" rx="2" fill="'+(ok?(r===c?col+'88':col):'#F1EFF8')+'"/>';
+      }
+      s+='<rect x="'+(x0+16)+'" y="'+(y0+F*cs-2)+'" width="'+(8*cs+2)+'" height="'+(cs+2)+'" rx="3" fill="none" stroke="#14113B" stroke-width="2"/>';
+      return s;
+    }
+    h+=grid(20,330,'Branch mask (hop = 1 here)',VI,isBranch);
+    h+=grid(330,330,'Sibling mask (horizontal)',PK,isSib);
+    h+='<text x="20" y="482" font-size="12" fill="#5F5B80">row = node being updated · column = node it may attend to · coloured = 0, blank = −∞</text>';
+    ac.innerHTML=h;
+  }
+
+  var stage=document.getElementById('stage');
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var bar=document.getElementById('bar'),count=document.getElementById('count');
+  var i=0;
+  function fit(){
+    var sc=Math.min(window.innerWidth/1280,window.innerHeight/720)*0.96;
+    stage.style.transform='translate(-50%,-50%) scale('+sc+')';
+  }
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach(function(s,k){s.classList.toggle('active',k===i);});
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.textContent=(i+1)+' / '+slides.length;
+    if(location.hash!=='#'+(i+1)) history.replaceState(null,'','#'+(i+1));
+  }
+  document.addEventListener('keydown',function(e){
+    if(['ArrowRight','PageDown',' ','Enter'].indexOf(e.key)>=0){e.preventDefault();show(i+1);}
+    else if(['ArrowLeft','PageUp','Backspace'].indexOf(e.key)>=0){e.preventDefault();show(i-1);}
+    else if(e.key==='Home') show(0);
+    else if(e.key==='End') show(slides.length-1);
+    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+  });
+  stage.addEventListener('click',function(e){ if(e.target.closest('a')) return; var r=stage.getBoundingClientRect(); show(e.clientX>r.left+r.width/2?i+1:i-1); });
+  window.addEventListener('resize',fit);
+  fit(); show((parseInt(location.hash.slice(1),10)||1)-1);
+})();
+</script>
+</body>
+</html>

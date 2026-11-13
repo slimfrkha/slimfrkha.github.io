@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto-mapping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Theme tokens: Contentsquare-inspired palette, shared with the Zone Taxonomy deck. Swap hex values here to rebrand. */
+:root{
+  --navy:#14113B; --navy-2:#211C5C; --violet:#6C4CF5; --violet-2:#8E74FF; --lavender:#DCD3FF;
+  --mist:#F5F3FF; --ink:#1A1737; --muted:#5F5B80; --line:#E4E0F6;
+  --pink:#FF5C8A; --teal:#1FBFA0; --amber:#F5A623; --grey:#B9B6CC;
+  --stage:#0B0922;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--stage);font-family:var(--sans);color:var(--ink);overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center}
+.slide{position:absolute;inset:0;padding:52px 72px 64px;display:none;flex-direction:column;background:#fff;border-radius:6px;overflow:hidden}
+.slide.active{display:flex}
+.slide.dark{background:radial-gradient(1200px 700px at 85% 10%,var(--navy-2),var(--navy) 60%);color:#fff}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--violet)}
+.dark .kicker{color:var(--violet-2)}
+h1{font-size:76px;line-height:1.02;margin:0;font-weight:800;letter-spacing:-.02em}
+h2{font-size:38px;line-height:1.12;margin:8px 0 20px;font-weight:800;letter-spacing:-.015em}
+p,li{font-size:20px;line-height:1.45}
+.lead{font-size:22px;line-height:1.4;color:var(--muted);max-width:1000px;margin:0 0 18px}
+.dark .lead{color:#CFC9F5}
+.muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{background:var(--mist);border:1px solid var(--line);border-radius:16px;padding:18px 22px}
+.card h3{margin:0 0 8px;font-size:20px}
+.card p{margin:0;font-size:16.5px;color:var(--muted);line-height:1.45}
+.dark .card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+.dark .card h3{color:#fff}
+.dark .card p{color:#D6D1F7}
+.stat{font-size:52px;font-weight:800;color:var(--violet);line-height:1}
+.pill{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--lavender);color:var(--navy);font-size:14px;font-weight:600;margin:0 6px 8px 0}
+.pill b{color:var(--violet)}
+.code{font-family:var(--mono);background:#100D30;color:#ECE8FF;border-radius:12px;padding:14px 18px;font-size:14px;line-height:1.6;white-space:pre}
+.code .k{color:#B7A8FF}.code .s{color:#FFB3C8}.code .c{color:#8C86C4}
+table.t{border-collapse:collapse;width:100%;font-size:16px}
+table.t th{text-align:left;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--line);padding:7px 10px}
+table.t td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+.mono{font-family:var(--mono)}
+.c-v{color:var(--violet)} .c-p{color:var(--pink)} .c-t{color:#139C82} .c-a{color:#B07205}
+.foot{position:absolute;left:72px;right:72px;bottom:22px;display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.dark .foot{color:#A9A2E0}
+.brandbar{position:absolute;left:0;top:0;height:6px;width:100%;background:linear-gradient(90deg,var(--violet),var(--pink))}
+a.src{display:block;text-decoration:none;color:inherit;border:2px solid var(--line);transition:border-color .15s}
+a.src:hover{border-color:var(--violet)}
+a.src .mono{overflow-wrap:anywhere}
+a.src h3{font-size:18px}
+svg text{font-family:var(--sans)}
+.step{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}
+.step .n{flex:0 0 32px;height:32px;border-radius:50%;background:var(--violet);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
+.step p{margin:3px 0 0;font-size:17.5px;line-height:1.4}
+.formula{font-family:var(--mono);font-size:15.5px;background:var(--mist);border-left:4px solid var(--violet);padding:12px 16px;border-radius:6px;line-height:1.65}
+.band{background:var(--navy);border-radius:16px;padding:16px 24px;color:#fff}
+.band .kicker{color:var(--violet-2);font-size:12px;display:block;margin-bottom:4px}
+/* chrome */
+#bar{position:fixed;left:0;bottom:0;height:4px;background:var(--violet);transition:width .25s;z-index:5}
+#count{position:fixed;right:16px;bottom:12px;color:#8E88C7;font:600 13px var(--sans);z-index:5}
+#help{position:fixed;left:16px;top:12px;color:#8E88C7;font:12px var(--sans);z-index:5;transition:opacity .6s}
+@media print{@page{size:1280px 720px;margin:0}html,body{overflow:visible;height:auto;background:#fff}#stage{position:static;transform:none!important;width:1280px;height:auto}.slide{display:flex!important;position:relative;height:720px;border-radius:0;break-after:page}#bar,#count,#help{display:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<section class="slide dark">
+  <div class="brandbar"></div>
+  <div style="margin-top:150px">
+    <div class="kicker">URL understanding @ Contentsquare · 2021 – 2024</div>
+    <h1 style="margin-top:18px">Auto-mapping</h1>
+    <p class="lead" style="font-size:30px;margin-top:22px;color:#E3DEFF">Proposing a website's page groups, their rules<br>and their page categories, straight from its URLs.</p>
+  </div>
+  <div style="margin-top:auto;display:flex;gap:12px;align-items:center">
+    <span class="pill">URLs + views in</span><span class="pill">page groups + rules out</span><span class="pill">human in the loop</span><span style="margin-left:auto;color:#CFC9F5;font-size:18px">Slim Frikha</span>
+  </div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">The product problem</div>
+  <h2>Every website needs a mapping</h2>
+  <div class="grid2" style="grid-template-columns:600px 1fr;gap:34px">
+    <svg viewBox="0 0 600 420" width="600" height="420" aria-label="Sketch of a mapping: page categories, page groups and the rules of one group">
+      <defs><marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1A1737"/></marker></defs>
+      <rect x="0.5" y="0.5" width="599" height="419" rx="12" fill="#FBFAFF" stroke="#E4E0F6"/>
+      <path d="M0.5,12.5 a12,12 0 0 1 12,-12 h575 a12,12 0 0 1 12,12 v14 h-599 z" fill="#EEEAFE"/>
+      <circle cx="16" cy="14" r="4.5" fill="#FF5C8A"/><circle cx="30" cy="14" r="4.5" fill="#F5A623"/><circle cx="44" cy="14" r="4.5" fill="#1FBFA0"/>
+      <text x="20" y="54" font-size="15" font-weight="800" fill="#1A1737">Reference mapping</text>
+      <g><rect x="20" y="64" width="50" height="7" fill="#F5A623"/><rect x="70" y="64" width="190" height="7" fill="#6C4CF5"/><rect x="260" y="64" width="40" height="7" fill="#1FBFA0"/><rect x="300" y="64" width="250" height="7" fill="#FF5C8A"/><rect x="550" y="64" width="30" height="7" fill="#8E74FF"/></g>
+      <rect x="20" y="86" width="128" height="312" rx="8" fill="#fff" stroke="#FF5C8A" stroke-width="1.5"/>
+      <g font-size="11" font-weight="700" fill="#1A1737">
+        <text x="32" y="108">HOME</text><text x="32" y="140">CATEGORY</text><text x="32" y="236">PRODUCT</text>
+        <text x="32" y="292">CART</text><text x="32" y="322">CONFIRMATION</text><text x="32" y="352">MY ACCOUNT</text>
+      </g>
+      <g stroke-width="2.5"><line x1="32" y1="114" x2="80" y2="114" stroke="#F5A623"/><line x1="32" y1="146" x2="92" y2="146" stroke="#6C4CF5"/><line x1="32" y1="242" x2="88" y2="242" stroke="#1FBFA0"/><line x1="32" y1="298" x2="66" y2="298" stroke="#FF5C8A"/><line x1="32" y1="328" x2="112" y2="328" stroke="#8E74FF"/><line x1="32" y1="358" x2="104" y2="358" stroke="#F5A623"/></g>
+      <text x="84" y="388" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FF5C8A">Page categories</text>
+      <rect x="162" y="86" width="210" height="312" rx="8" fill="#fff" stroke="#6C4CF5" stroke-width="1.5"/>
+      <g font-size="12" fill="#1A1737">
+        <circle cx="178" cy="105" r="4" fill="#F5A623"/><text x="190" y="109">Home</text>
+        <circle cx="178" cy="137" r="4" fill="#6C4CF5"/><text x="190" y="141">Category</text>
+        <circle cx="178" cy="161" r="4" fill="#6C4CF5"/><text x="190" y="165">Top categories</text>
+        <circle cx="178" cy="185" r="4" fill="#6C4CF5"/><text x="190" y="189">Offers</text>
+        <rect x="170" y="221" width="194" height="22" rx="5" fill="#EEEAFE"/>
+        <circle cx="178" cy="233" r="4" fill="#1FBFA0"/><text x="190" y="237" font-weight="700">Product page</text>
+        <circle cx="178" cy="257" r="4" fill="#1FBFA0"/><text x="190" y="261">Product page (add to bag)</text>
+        <circle cx="178" cy="289" r="4" fill="#FF5C8A"/><text x="190" y="293">Shopping cart</text>
+        <circle cx="178" cy="319" r="4" fill="#8E74FF"/><text x="190" y="323">Order confirmation</text>
+        <circle cx="178" cy="349" r="4" fill="#F5A623"/><text x="190" y="353">Profile</text>
+      </g>
+      <text x="267" y="388" text-anchor="middle" font-size="11.5" font-weight="700" fill="#6C4CF5">Page groups</text>
+      <path d="M364,232 C384,232 384,252 398,252" fill="none" stroke="#1A1737" stroke-width="1.5" marker-end="url(#ma)"/>
+      <rect x="400" y="196" width="186" height="146" rx="8" fill="#fff" stroke="#1A1737" stroke-width="1.5"/>
+      <text x="412" y="218" font-size="13" font-weight="800" fill="#1A1737">Product page</text>
+      <text x="412" y="236" font-size="10.5" fill="#77738F">Batch 1</text>
+      <g font-size="11" fill="#1A1737">
+        <text x="412" y="258">Path <tspan font-weight="700">contains</tspan></text>
+        <text x="412" y="274" font-family="JetBrains Mono, monospace" fill="#6C4CF5">"/product/"</text>
+        <text x="412" y="294">AND Query <tspan font-weight="700">does not contain</tspan></text>
+        <text x="412" y="310" font-family="JetBrains Mono, monospace" fill="#6C4CF5">"cs-popin-add-to-bag"</text>
+      </g>
+      <text x="493" y="360" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1A1737">Rules</text>
+    </svg>
+    <div>
+      <div class="card" style="margin-bottom:14px"><h3>A mapping = a set of page groups</h3><p>Each page group gathers similar pages, is built with <b>rules</b> on the URL, and is assigned a <b>page category</b>.</p></div>
+      <div class="card" style="margin-bottom:14px"><h3>Rules use the product's operators</h3><p>contains, does not contain, exactly matches, begins with, ends with, regex… on the path, the query or custom variables, combined with AND / OR.</p></div>
+      <div class="card" style="background:var(--navy);border-color:var(--navy)"><p style="color:#fff;font-size:17.5px"><b>Why it matters:</b> a mapping is the logical view of a site that analyses build on: journey analysis, and any automatic analysis that needs page context.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Product problem</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">The product problem</div>
+  <h2>Mapping by hand doesn't scale</h2>
+  <div style="display:grid;grid-template-columns:640px 1fr;gap:34px;align-items:start">
+    <div>
+      <svg viewBox="0 0 640 286" width="640" height="286" aria-label="Sketch of the rule editor" style="display:block">
+        <rect x="0.5" y="0.5" width="639" height="285" rx="10" fill="#fff" stroke="#E4E0F6"/>
+        <text x="16" y="26" font-size="13" font-weight="800" fill="#1A1737">Set up the mapping</text>
+        <text x="16" y="42" font-size="10.5" fill="#77738F">Group URLs to create pages</text>
+        <rect x="16" y="54" width="118" height="26" rx="4" fill="#F5F3FF" stroke="#E4E0F6"/><text x="26" y="71" font-size="11.5" fill="#1A1737">Path</text><text x="122" y="71" font-size="10" fill="#77738F" text-anchor="end">▾</text>
+        <rect x="144" y="54" width="118" height="26" rx="4" fill="#EEF3FF" stroke="#E4E0F6"/><text x="154" y="71" font-size="11.5" fill="#1A1737">contains</text><text x="250" y="71" font-size="10" fill="#77738F" text-anchor="end">▾</text>
+        <rect x="272" y="54" width="200" height="26" rx="4" fill="#fff" stroke="#E4E0F6"/><text x="282" y="71" font-size="11.5" font-family="JetBrains Mono, monospace" fill="#1A1737">/product/</text>
+        <g font-size="11" font-weight="800" fill="#fff">
+          <circle cx="16" cy="54" r="9" fill="#FF5C8A"/><text x="16" y="58" text-anchor="middle">1</text>
+          <circle cx="144" cy="54" r="9" fill="#FF5C8A"/><text x="144" y="58" text-anchor="middle">2</text>
+          <circle cx="272" cy="54" r="9" fill="#FF5C8A"/><text x="272" y="58" text-anchor="middle">3</text>
+        </g>
+        <text x="16" y="104" font-size="11" font-weight="700" fill="#1A1737">URLs not included (12,000)</text>
+        <rect x="16" y="110" width="110" height="2" fill="#1A1737"/>
+        <g font-size="10.5" font-family="JetBrains Mono, monospace" fill="#5B6FD8">
+          <text x="16" y="134">/en/product/oak-desk-a1048</text>
+          <text x="16" y="156">/en/product/linen-sofa-a2213</text>
+          <text x="16" y="178">/en/product/wall-shelf-a3390</text>
+          <text x="16" y="200">/en/product/floor-lamp-a4127</text>
+          <text x="16" y="222">/en/product/side-table-a5562</text>
+          <text x="16" y="244">/en/product/bed-frame-a6031</text>
+        </g>
+        <g font-size="10.5" fill="#77738F" text-anchor="end"><text x="420" y="134">1,200</text><text x="420" y="156">1,100</text><text x="420" y="178">950</text><text x="420" y="200">900</text><text x="420" y="222">860</text><text x="420" y="244">800</text></g>
+        <rect x="448" y="92" width="178" height="182" rx="8" fill="#F5F3FF" stroke="#E4E0F6"/>
+        <circle cx="464" cy="114" r="5" fill="none" stroke="#6C4CF5" stroke-width="2"/><circle cx="464" cy="114" r="2" fill="#6C4CF5"/>
+        <text x="476" y="118" font-size="11" fill="#1A1737">Create a new page</text>
+        <rect x="460" y="128" width="154" height="26" rx="4" fill="#fff" stroke="#FF5C8A" stroke-width="1.5"/><text x="470" y="145" font-size="11" fill="#1A1737">product page</text>
+        <rect x="460" y="166" width="154" height="26" rx="4" fill="#fff" stroke="#FF5C8A" stroke-width="1.5"/><text x="470" y="183" font-size="11" fill="#1A1737">Product</text><text x="604" y="183" font-size="10" fill="#77738F" text-anchor="end">▾</text>
+        <g font-size="11" font-weight="800" fill="#fff">
+          <circle cx="460" cy="128" r="9" fill="#FF5C8A"/><text x="460" y="132" text-anchor="middle">4</text>
+          <circle cx="460" cy="166" r="9" fill="#FF5C8A"/><text x="460" y="170" text-anchor="middle">5</text>
+        </g>
+        <rect x="460" y="234" width="154" height="28" rx="5" fill="#6C4CF5"/><text x="537" y="252" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Create</text>
+      </svg>
+      <p class="muted" style="font-size:14px;margin:8px 0 0">Today (sketch): pick a URL part ①, an operator ②, a value ③, check the matched URLs, name the page group ④ and pick its category ⑤. Repeat for every group, on every website.</p>
+    </div>
+    <div>
+      <p style="margin:0 0 10px;font-weight:700">Creating a mapping is:</p>
+      <div class="step"><div class="n" style="background:var(--pink)">1</div><p><b>Too manual</b>: every rule is written by a person.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">2</div><p><b>Cumbersome</b> and hard to learn.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">3</div><p><b>Time-consuming</b>, group after group.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">4</div><p><b>A human bottleneck</b> for every feature that depends on mappings.</p></div>
+    </div>
+  </div>
+  <div class="band" style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px">
+    <p style="margin:0;font-size:17px"><span class="kicker">Task 1</span>Create meaningful page groups (clusters)</p>
+    <p style="margin:0;font-size:17px"><span class="kicker">Task 2</span>Determine the conditions that build each group</p>
+    <p style="margin:0;font-size:17px"><span class="kicker">Task 3</span>Determine each group's page category</p>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Product problem</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">The product problem · Data</div>
+  <h2>Reference mappings as ground truth</h2>
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:44px">
+    <div>
+      <div class="stat">467</div><p class="muted" style="margin:4px 0 16px;font-size:17px">websites with a reference mapping</p>
+      <div class="stat">16</div><p class="muted" style="margin:4px 0 16px;font-size:17px">page categories</p>
+      <div class="stat">1,000</div><p class="muted" style="margin:4px 0 16px;font-size:17px">URLs sampled per website, half weighted by traffic</p>
+      <div class="stat">~650</div><p class="muted" style="margin:4px 0 0;font-size:17px">curated important terms</p>
+    </div>
+    <div>
+      <p style="margin:0 0 8px;font-weight:700;font-size:18px">One URL, four parts, and its terms</p>
+<div class="code"><span class="c"># a URL with its custom variables after ||</span>
+url = <span class="s">"shop.example/gb/en/?utm_content=6578sd&amp;id=7766||logged&lt;true~pagetype&lt;home"</span>
+
+<span class="k">host</span>   shop.example
+<span class="k">path</span>   levels  = ['gb', 'en']
+<span class="k">query</span>  keys    = ['utm_content', 'id']      values = ['6578sd', '7766']
+<span class="k">cvars</span>  keys    = ['logged', 'pagetype']     values = ['true', 'home']
+
+<span class="k">terms</span>  = ['gb', 'en', 'utm_content', 'id', 'logged', 'pagetype']</div>
+      <div class="card" style="margin-top:14px"><p>Each URL comes with its <b>views</b>, its reference <b>page group</b>, that group's <b>rules</b> and <b>page category</b>. Mappings are kept when they are clean: enough URLs and categories, few URLs matching two groups, most traffic mapped.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Data</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">The product problem · Data</div>
+  <h2>Thousands of URLs, but one set of templates per website</h2>
+  <div style="display:grid;grid-template-columns:600px 1fr;gap:36px">
+    <svg viewBox="0 0 600 430" width="600" height="430" aria-label="Two websites whose URLs collapse into a few templates each">
+      <defs><marker id="ta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6C4CF5"/></marker></defs>
+      <rect x="0.5" y="0.5" width="599" height="200" rx="12" fill="#FBFAFF" stroke="#E4E0F6"/>
+      <text x="16" y="26" font-size="13" font-weight="800" fill="#1A1737">shop-a.example</text><text x="134" y="26" font-size="12" fill="#77738F">path-based</text>
+      <g font-size="11" font-family="JetBrains Mono, monospace" fill="#1A1737">
+        <text x="16" y="56">/fr/product/oak-desk-a1048</text><text x="16" y="78">/fr/product/pine-shelf-a2213</text>
+        <text x="16" y="100">/fr/product/sofa-bed-a3390</text><text x="16" y="122">/fr/c/bedroom</text>
+        <text x="16" y="144">/fr/c/kitchen</text><text x="16" y="166">/fr/search?q=sofa</text><text x="16" y="186" fill="#77738F">… thousands more</text>
+      </g>
+      <path d="M232,104 L300,104" stroke="#6C4CF5" stroke-width="2" marker-end="url(#ta)"/>
+      <g font-size="11.5" font-family="JetBrains Mono, monospace" font-weight="600">
+        <rect x="312" y="52" width="270" height="28" rx="14" fill="#DCD3FF"/><text x="326" y="71" fill="#14113B">/fr/product/{slug}-{id}</text>
+        <rect x="312" y="90" width="270" height="28" rx="14" fill="#DCD3FF"/><text x="326" y="109" fill="#14113B">/fr/c/{name}</text>
+        <rect x="312" y="128" width="270" height="28" rx="14" fill="#DCD3FF"/><text x="326" y="147" fill="#14113B">/fr/search?q=*</text>
+      </g>
+      <rect x="0.5" y="226" width="599" height="203" rx="12" fill="#FBFAFF" stroke="#E4E0F6"/>
+      <text x="16" y="252" font-size="13" font-weight="800" fill="#1A1737">shop-b.example</text><text x="134" y="252" font-size="12" fill="#77738F">query + custom variables</text>
+      <g font-size="10.5" font-family="JetBrains Mono, monospace" fill="#1A1737">
+        <text x="16" y="282">/index?page=item&amp;id=123||type&lt;product</text><text x="16" y="304">/index?page=item&amp;id=987||type&lt;product</text>
+        <text x="16" y="326">/index?page=list&amp;cat=12||type&lt;category</text><text x="16" y="348">/index?page=list&amp;cat=40||type&lt;category</text>
+        <text x="16" y="370">/index?page=basket||type&lt;cart</text><text x="16" y="410" fill="#77738F">… thousands more</text>
+      </g>
+      <path d="M290,330 L300,330" stroke="#6C4CF5" stroke-width="2" marker-end="url(#ta)"/>
+      <g font-size="11" font-family="JetBrains Mono, monospace" font-weight="600">
+        <rect x="312" y="278" width="270" height="28" rx="14" fill="#FFD9E4"/><text x="324" y="297" fill="#14113B">page=item · type=product</text>
+        <rect x="312" y="316" width="270" height="28" rx="14" fill="#FFD9E4"/><text x="324" y="335" fill="#14113B">page=list · type=category</text>
+        <rect x="312" y="354" width="270" height="28" rx="14" fill="#FFD9E4"/><text x="324" y="373" fill="#14113B">page=basket · type=cart</text>
+      </g>
+    </svg>
+    <div>
+      <div class="step"><div class="n">1</div><p><b>Variability lives between websites.</b> URL design, naming, language and rule style are set per site.</p></div>
+      <div class="step"><div class="n">2</div><p><b>More URLs of a known site add little.</b> They mostly repeat its templates with new IDs: 1,000 URLs per site are enough.</p></div>
+      <div class="step"><div class="n">3</div><p><b>Split by website.</b> Train, validation and test websites are kept apart, so scores measure sites the system has never seen.</p></div>
+      <div class="step"><div class="n">4</div><p><b>Progress comes from new websites.</b> Each newly mapped site brings new terms and conventions.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Data variability</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">The modeling solution · Design choices</div>
+  <h2>Two choices that shape the solution</h2>
+  <div class="grid2" style="gap:28px">
+    <div class="card" style="border-left:5px solid var(--violet)">
+      <div class="kicker" style="font-size:12px">Choice 1</div>
+      <h3 style="margin-top:6px;font-size:22px">Cluster, then describe</h3>
+      <p>Group similar URLs without labels, then write rules for each group. The output has the shape of a mapping: groups, rules, categories.</p>
+      <p style="margin-top:12px;font-size:15px">A first attempt classified single URLs into page categories with a character-level CNN over path, query and custom variables. It performed poorly on several categories, and a per-URL label gives neither groups nor rules.</p>
+    </div>
+    <div class="card" style="border-left:5px solid var(--pink)">
+      <div class="kicker" style="font-size:12px;color:var(--pink)">Choice 2</div>
+      <h3 style="margin-top:6px;font-size:22px">Measure against human mappings</h3>
+      <p>Clustering becomes a pairwise classification: for each pair of URLs, are they in the same reference page group, and in the same proposed group?</p>
+      <div class="formula" style="margin-top:12px;font-size:14.5px">per website w: F1<sub>w</sub> = ½ (F1<sub>same</sub> + F1<sub>different</sub>)<br>score = mean of F1<sub>w</sub> over validation websites</div>
+      <p style="margin-top:10px;font-size:15px">Validation websites are never used to build anything, so the score measures websites the system has never seen.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Design choices</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The modeling solution · First version</div>
+  <h2>First version: a plain URL distance and a silhouette cut</h2>
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:44px">
+    <div>
+      <div class="step"><div class="n">1</div><p><b>Sample</b> 1,000 URLs per website.</p></div>
+      <div class="step"><div class="n">2</div><p><b>Distance, field by field</b>: same host? same value at each path level? how many shared query and custom-variable keys, with equal values? Normalized over levels, keys and URL parts, bounded in [0, 1]. <b>Every term weighs the same.</b></p></div>
+      <div class="step"><div class="n">3</div><p><b>Hierarchical clustering</b> builds a tree (a dendrogram) over the URLs.</p></div>
+      <div class="step"><div class="n">4</div><p><b>Cut the tree</b>: try every number of clusters between 10 and 40, and keep the one with the best silhouette score.</p></div>
+      <div class="step"><div class="n">5</div><p><b>Write rules</b> for each cluster.</p></div>
+    </div>
+    <div class="card" style="text-align:center;padding:28px 22px">
+      <div class="kicker" style="font-size:12px">Pairwise macro F1</div>
+      <div class="stat" style="font-size:72px;margin-top:14px">63.5%</div>
+      <p style="margin-top:8px;font-size:18px">± 10.8% across websites</p>
+      <p style="margin-top:18px;font-size:14.5px">Validation websites</p>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>First version</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The modeling solution · First version</div>
+  <h2>Why the first version breaks</h2>
+  <div class="grid2" style="grid-template-columns:560px 1fr;gap:36px">
+    <div>
+      <svg viewBox="0 0 560 330" width="560" height="330" aria-label="Unweighted dendrogram: the top split is the locale, and the silhouette cut gives fragmented and mixed groups">
+        <g fill="none" stroke="#B9B6CC" stroke-width="2">
+          <polyline points="30,250 30,200 90,200 90,250"/><polyline points="150,250 150,200 210,200 210,250"/>
+          <polyline points="60,200 60,140 180,140 180,200"/>
+          <polyline points="320,250 320,200 380,200 380,250"/><polyline points="440,250 440,200 500,200 500,250"/>
+          <polyline points="350,200 350,140 470,140 470,200"/>
+          <polyline points="120,140 120,70 410,70 410,140"/>
+        </g>
+        <g fill="#fff" stroke="#6C4CF5" stroke-width="2.5">
+          <circle cx="60" cy="200" r="7"/><circle cx="180" cy="200" r="7"/><circle cx="120" cy="140" r="7"/>
+          <circle cx="350" cy="200" r="7"/><circle cx="470" cy="200" r="7"/><circle cx="410" cy="140" r="7"/><circle cx="265" cy="70" r="7"/>
+        </g>
+        <g fill="#1A1737"><circle cx="30" cy="250" r="4"/><circle cx="90" cy="250" r="4"/><circle cx="150" cy="250" r="4"/><circle cx="210" cy="250" r="4"/><circle cx="320" cy="250" r="4"/><circle cx="380" cy="250" r="4"/><circle cx="440" cy="250" r="4"/><circle cx="500" cy="250" r="4"/></g>
+        <text x="277" y="58" font-size="12.5" font-weight="700" fill="#5F5B80">first split: en | fr</text>
+        <line x1="8" y1="172" x2="552" y2="172" stroke="#FF5C8A" stroke-width="2" stroke-dasharray="7 5"/>
+        <text x="552" y="164" text-anchor="end" font-size="12" font-weight="700" fill="#FF5C8A">silhouette cut</text>
+        <g font-size="10.5" font-family="JetBrains Mono, monospace" fill="#1A1737" text-anchor="middle">
+          <text x="30" y="270">/en/</text><text x="90" y="270">/en/</text><text x="150" y="270">/en/</text><text x="210" y="270">/en/</text>
+          <text x="320" y="270">/fr/</text><text x="380" y="270">/fr/</text><text x="440" y="270">/fr/</text><text x="500" y="270">/fr/</text>
+          <text x="30" y="284">product</text><text x="90" y="284">product</text><text x="150" y="284">cart</text><text x="210" y="284">search</text>
+          <text x="320" y="284">product</text><text x="380" y="284">product</text><text x="440" y="284">cart</text><text x="500" y="284">search</text>
+        </g>
+        <g stroke="#FF5C8A" stroke-width="2"><line x1="14" y1="296" x2="106" y2="296"/><line x1="134" y1="296" x2="226" y2="296"/><line x1="304" y1="296" x2="396" y2="296"/><line x1="424" y1="296" x2="516" y2="296"/></g>
+        <g font-size="11.5" font-weight="700" fill="#FF5C8A" text-anchor="middle">
+          <text x="60" y="314">product, en only</text><text x="180" y="314">cart + search</text><text x="350" y="314">product, fr only</text><text x="470" y="314">cart + search</text>
+        </g>
+      </svg>
+      <p class="muted" style="font-size:13.5px;margin:4px 0 0">Illustrative tree: the cut gives product groups split by locale, and groups mixing page types.</p>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px"><h3>The distance is blind to meaning</h3><p>A match on an ID or a locale counts as much as a match on <span class="mono">product</span>. For example, two product URLs are 0.21 apart, and a product and a cart only 0.43.</p></div>
+      <div class="card" style="margin-bottom:14px"><h3>The cut is blind to meaning</h3><p>The number of clusters comes from the silhouette score, a geometric criterion. The splits that matter, like product versus cart, can sit anywhere in the tree, even at the very bottom: groups come out fragmented, or mixing page types.</p></div>
+      <div class="band"><p style="margin:0;font-size:17.5px">Both need to know <b>which terms matter</b>: the second version adds a term library.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>First version</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The modeling solution · Second version</div>
+  <h2>Second version: add a term library</h2>
+  <svg viewBox="0 0 1136 300" width="1136" height="300" aria-label="Pipeline from URLs to page groups">
+    <defs><marker id="pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6C4CF5"/></marker></defs>
+    <g font-size="14" font-weight="700" fill="#fff" text-anchor="middle">
+      <rect x="0" y="96" width="160" height="78" rx="12" fill="#6C4CF5"/><text x="80" y="130">Sample</text><text x="80" y="150" font-weight="500" font-size="12">1,000 URLs + views</text>
+      <rect x="195" y="96" width="160" height="78" rx="12" fill="#6C4CF5"/><text x="275" y="130">Important terms</text><text x="275" y="150" font-weight="500" font-size="12">match the library</text>
+      <rect x="390" y="96" width="160" height="78" rx="12" fill="#6C4CF5"/><text x="470" y="130">Weighted distance</text><text x="470" y="150" font-weight="500" font-size="12">N × N matrix</text>
+      <rect x="585" y="96" width="160" height="78" rx="12" fill="#6C4CF5"/><text x="665" y="130">Hierarchical</text><text x="665" y="150">clustering</text>
+      <rect x="780" y="96" width="160" height="78" rx="12" fill="#6C4CF5"/><text x="860" y="130">Cut the tree</text><text x="860" y="150" font-weight="500" font-size="12">where terms define groups</text>
+      <rect x="975" y="96" width="160" height="78" rx="12" fill="#14113B"/><text x="1055" y="130">Rules + category</text><text x="1055" y="150" font-weight="500" font-size="12">per page group</text>
+    </g>
+    <g stroke="#6C4CF5" stroke-width="2.5"><line x1="161" y1="135" x2="192" y2="135" marker-end="url(#pa)"/><line x1="356" y1="135" x2="387" y2="135" marker-end="url(#pa)"/><line x1="551" y1="135" x2="582" y2="135" marker-end="url(#pa)"/><line x1="746" y1="135" x2="777" y2="135" marker-end="url(#pa)"/><line x1="941" y1="135" x2="972" y2="135" marker-end="url(#pa)"/></g>
+    <g font-size="12.5" fill="#5F5B80" text-anchor="middle"><text x="665" y="196">dendrogram</text></g>
+    <rect x="200" y="0" width="150" height="54" rx="10" fill="#FFE3EB" stroke="#FF5C8A"/>
+    <text x="275" y="23" text-anchor="middle" font-size="13" font-weight="700" fill="#14113B">Person (Term Builder)</text><text x="275" y="41" text-anchor="middle" font-size="11.5" fill="#5F5B80">confirms the terms</text>
+    <line x1="275" y1="55" x2="275" y2="93" stroke="#FF5C8A" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#pa)"/>
+    <ellipse cx="275" cy="232" rx="70" ry="12" fill="#DCD3FF" stroke="#6C4CF5"/><path d="M205,232 v36 a70,12 0 0 0 140,0 v-36" fill="#DCD3FF" stroke="#6C4CF5"/>
+    <text x="275" y="258" text-anchor="middle" font-size="12.5" font-weight="700" fill="#14113B">term library</text>
+    <line x1="275" y1="218" x2="275" y2="178" stroke="#6C4CF5" stroke-width="2" marker-end="url(#pa)"/>
+    <rect x="975" y="210" width="160" height="58" rx="10" fill="#E3F7F2" stroke="#1FBFA0"/>
+    <text x="1055" y="234" text-anchor="middle" font-size="13" font-weight="700" fill="#14113B">Clusters screen</text><text x="1055" y="252" text-anchor="middle" font-size="11.5" fill="#5F5B80">person reviews, saves</text>
+    <line x1="1055" y1="175" x2="1055" y2="207" stroke="#1FBFA0" stroke-width="2" marker-end="url(#pa)"/>
+    <g font-size="11" font-weight="800" fill="#fff" text-anchor="middle">
+      <rect x="311" y="84" width="44" height="18" rx="9" fill="#FF5C8A"/><text x="333" y="97">new</text>
+      <rect x="896" y="84" width="44" height="18" rx="9" fill="#FF5C8A"/><text x="918" y="97">new</text>
+      <rect x="350" y="218" width="44" height="18" rx="9" fill="#FF5C8A"/><text x="372" y="231">new</text>
+    </g>
+  </svg>
+  <div class="grid3" style="margin-top:6px">
+    <div class="card"><p><b>Unsupervised</b>: no labels at prediction time, one run per website.</p></div>
+    <div class="card"><p><b>Guided</b> by the term library and by the person's choice of terms.</p></div>
+    <div class="card"><p><b>Explainable</b>: every group comes with rules and the terms behind it.</p></div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Solution overview</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 1 Important terms</div>
+  <h2>A curated library of terms that carry meaning</h2>
+  <div class="grid2" style="grid-template-columns:520px 1fr;gap:40px">
+    <div>
+      <p style="margin:0 0 8px;font-weight:700;font-size:18px">Most frequent path terms in the library</p>
+      <table class="t">
+        <tr><th>term</th><th>websites</th><th>valid</th><th>page category</th></tr>
+        <tr><td class="mono">search</td><td>151</td><td class="c-t">yes</td><td class="mono">search</td></tr>
+        <tr><td class="mono">checkout</td><td>138</td><td class="c-t">yes</td><td class="mono">checkout</td></tr>
+        <tr><td class="mono">login</td><td>116</td><td class="c-t">yes</td><td class="mono">form</td></tr>
+        <tr><td class="mono">cart</td><td>97</td><td class="c-t">yes</td><td class="mono">cart</td></tr>
+        <tr><td class="mono">account</td><td>86</td><td class="c-t">yes</td><td class="mono">my_account</td></tr>
+        <tr><td class="mono">contact</td><td>72</td><td class="c-t">yes</td><td class="mono">help_support</td></tr>
+        <tr><td class="mono">faq</td><td>53</td><td class="c-t">yes</td><td class="mono">help_support</td></tr>
+      </table>
+      <p class="muted" style="font-size:14px;margin:8px 0 0">Three lists: path (302 terms), query (240), custom variables (109).</p>
+    </div>
+    <div>
+      <p style="margin:0 0 10px;font-weight:700">Build the library</p>
+      <div class="step"><div class="n">1</div><p>Extract the terms used in the rules of reference mappings, from <b>training websites</b> only.</p></div>
+      <div class="step"><div class="n">2</div><p>Annotate their importance by hand, with a page category when it is clear. The flywheel keeps adding terms (slide 17).</p></div>
+      <p style="margin:16px 0 10px;font-weight:700">For a new website</p>
+      <div class="step"><div class="n" style="background:var(--pink)">3</div><p>Extract its distinct terms, with their share of URLs and traffic.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">4</div><p>A term is <b>important</b> if it is very similar to a library term (Levenshtein ratio &gt; 0.8). It inherits that term's category.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">5</div><p>Terms on more than 95% of URLs lose their importance: they can't tell groups apart.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Deep dive · terms</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 2 Weighted distance</div>
+  <h2>Weighting aligns the distance with business needs</h2>
+  <div class="grid2" style="grid-template-columns:1fr 540px;gap:40px">
+    <div>
+      <div class="formula">d(a, b) = 1 − Σ<sub>part</sub> W<sub>part</sub> · S<sub>part</sub>(a, b) / Σ W<sub>part</sub><br>
+      parts: host · path · query · custom variables</div>
+      <div class="step" style="margin-top:18px"><div class="n">1</div><p><b>Field by field</b>: same host? same value at each path level? how many shared keys, with equal values?</p></div>
+      <div class="step"><div class="n">2</div><p><b>Term weights</b>: an important term weighs 0.9, any other 0.1, so matching on <span class="mono">product</span> counts 9× more than matching on an ID.</p></div>
+      <div class="step"><div class="n">3</div><p><b>Part weights</b> come from the traffic of each part's important terms. The host gets half of the smallest.</p></div>
+      <div class="step"><div class="n">4</div><p>Bounded in [0, 1]. The full N × N matrix is computed in <b>Rust</b>.</p></div>
+    </div>
+    <div>
+      <svg viewBox="0 0 540 330" width="540" height="330" aria-label="Distances with and without term weighting">
+        <text x="0" y="16" font-size="14" font-weight="700" fill="#1A1737">Distance between example URLs</text>
+        <g font-size="12.5" fill="#1A1737">
+          <text x="0" y="62">product_1 vs product_2</text><text x="0" y="78" font-size="11" fill="#77738F">same template</text>
+          <text x="0" y="152">product_1 vs cart</text><text x="0" y="168" font-size="11" fill="#77738F">different page types</text>
+          <text x="0" y="242">host only vs product_1</text><text x="0" y="258" font-size="11" fill="#77738F">nothing in common</text>
+        </g>
+        <g>
+          <rect x="190" y="48" width="64" height="16" rx="3" fill="#B9B6CC"/><text x="260" y="61" font-size="12" fill="#5F5B80">0.21</text>
+          <rect x="190" y="70" width="22" height="16" rx="3" fill="#6C4CF5"/><text x="218" y="83" font-size="12" font-weight="700" fill="#6C4CF5">0.07</text>
+          <rect x="190" y="138" width="129" height="16" rx="3" fill="#B9B6CC"/><text x="325" y="151" font-size="12" fill="#5F5B80">0.43</text>
+          <rect x="190" y="160" width="223" height="16" rx="3" fill="#6C4CF5"/><text x="419" y="173" font-size="12" font-weight="700" fill="#6C4CF5">0.74</text>
+          <rect x="190" y="228" width="257" height="16" rx="3" fill="#B9B6CC"/><text x="453" y="241" font-size="12" fill="#5F5B80">0.86</text>
+          <rect x="190" y="250" width="299" height="16" rx="3" fill="#6C4CF5"/><text x="495" y="263" font-size="12" font-weight="700" fill="#6C4CF5">1.00</text>
+        </g>
+        <line x1="190" y1="36" x2="190" y2="276" stroke="#E4E0F6"/>
+        <g font-size="12"><rect x="0" y="298" width="14" height="12" rx="2" fill="#B9B6CC"/><text x="20" y="309" fill="#5F5B80">first version</text>
+        <rect x="170" y="298" width="14" height="12" rx="2" fill="#6C4CF5"/><text x="190" y="309" fill="#5F5B80">with important-term weighting</text></g>
+      </svg>
+      <p class="muted" style="font-size:13.5px;margin:4px 0 0">URLs like <span class="mono">shop.example/products/1234?some_key=toto||c_key&lt;c_value~page_category&lt;product</span>; important terms: path <span class="mono">products</span>, <span class="mono">cart</span>; custom variable <span class="mono">page_category</span>.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Deep dive · distance</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 3 Weighting and the tree</div>
+  <h2>Weighting lifts important terms to the top of the tree</h2>
+  <div class="grid2" style="gap:28px">
+    <div class="card" style="background:#fff;padding:14px 16px">
+      <p style="margin:0 0 4px;font-weight:700;font-size:16px">Without weighting <span class="muted" style="font-weight:500">· first version</span></p>
+      <svg viewBox="0 0 540 250" width="100%" aria-label="Unweighted tree: nodes defined by one important term exist only at the leaves">
+        <g fill="none" stroke="#B9B6CC" stroke-width="2">
+          <polyline points="50,200 50,150 130,150 130,200"/><polyline points="90,150 90,110 210,110 210,200"/>
+          <polyline points="330,200 330,150 410,150 410,200"/><polyline points="370,150 370,110 490,110 490,200"/>
+          <polyline points="150,110 150,50 430,50 430,110"/>
+        </g>
+        <g fill="#fff" stroke="#6C4CF5" stroke-width="2.5"><circle cx="90" cy="150" r="8"/><circle cx="150" cy="110" r="8"/><circle cx="370" cy="150" r="8"/><circle cx="430" cy="110" r="8"/><circle cx="290" cy="50" r="8"/></g>
+        <g fill="#FFE3EB" stroke="#FF5C8A" stroke-width="2.5"><circle cx="50" cy="200" r="7"/><circle cx="130" cy="200" r="7"/><circle cx="210" cy="200" r="7"/><circle cx="330" cy="200" r="7"/><circle cx="410" cy="200" r="7"/><circle cx="490" cy="200" r="7"/></g>
+        <text x="302" y="40" font-size="12" font-weight="700" fill="#5F5B80">en | fr</text>
+        <g font-size="10.5" font-family="JetBrains Mono, monospace" fill="#1A1737" text-anchor="middle">
+          <text x="50" y="222">/en/product</text><text x="130" y="222">/en/cart</text><text x="210" y="222">/en/search</text>
+          <text x="330" y="222">/fr/product</text><text x="410" y="222">/fr/cart</text><text x="490" y="222">/fr/search</text>
+        </g>
+        <text x="270" y="246" text-anchor="middle" font-size="12.5" font-weight="700" fill="#FF5C8A">Nodes defined by one important term exist only at the bottom</text>
+      </svg>
+    </div>
+    <div class="card" style="background:#fff;padding:14px 16px">
+      <p style="margin:0 0 4px;font-weight:700;font-size:16px">With weighting <span class="muted" style="font-weight:500">· second version</span></p>
+      <svg viewBox="0 0 540 250" width="100%" aria-label="Weighted tree: one node per page type, right below the root">
+        <g fill="none" stroke="#B9B6CC" stroke-width="2">
+          <polyline points="50,200 50,140 130,140 130,200"/><polyline points="230,200 230,140 310,140 310,200"/><polyline points="410,200 410,140 490,140 490,200"/>
+          <polyline points="270,140 270,95 450,95 450,140"/><polyline points="90,140 90,50 360,50 360,95"/>
+        </g>
+        <g fill="#fff" stroke="#6C4CF5" stroke-width="2.5"><circle cx="360" cy="95" r="8"/><circle cx="225" cy="50" r="8"/></g>
+        <g fill="#FFE3EB" stroke="#FF5C8A" stroke-width="3"><circle cx="90" cy="140" r="9"/><circle cx="270" cy="140" r="9"/><circle cx="450" cy="140" r="9"/></g>
+        <g fill="#D9D6E6"><circle cx="50" cy="200" r="5"/><circle cx="130" cy="200" r="5"/><circle cx="230" cy="200" r="5"/><circle cx="310" cy="200" r="5"/><circle cx="410" cy="200" r="5"/><circle cx="490" cy="200" r="5"/></g>
+        <g font-size="12" font-weight="700" fill="#FF5C8A" text-anchor="middle"><text x="90" y="124">product</text><text x="270" y="124">cart</text><text x="450" y="124">search</text></g>
+        <text x="237" y="40" font-size="12" fill="#5F5B80">start here</text>
+        <g font-size="10.5" font-family="JetBrains Mono, monospace" fill="#1A1737" text-anchor="middle">
+          <text x="50" y="222">/en/product</text><text x="130" y="222">/fr/product</text><text x="230" y="222">/en/cart</text>
+          <text x="310" y="222">/fr/cart</text><text x="410" y="222">/en/search</text><text x="490" y="222">/fr/search</text>
+        </g>
+        <text x="270" y="246" text-anchor="middle" font-size="12.5" font-weight="700" fill="#6C4CF5">One node per page type, right below the root</text>
+      </svg>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:16px">
+    <div class="card"><p><b>Merged last.</b> Two URLs that differ on an important term are far apart, so they merge late: the split on that term sits near the root.</p></div>
+    <div class="card"><p><b>Met first.</b> Walking down from the root, the cut reaches nodes defined by an important term before any noise split, and stops there.</p></div>
+    <div class="card"><p><b>Not guaranteed before.</b> Without weighting, such nodes can sit at the bottom of the tree, and the groups come out fragmented or meaningless.</p></div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Deep dive · weighting and the tree</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 4 Tree cut</div>
+  <h2>Cut the tree where important terms define a group</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div class="card" style="padding:12px 14px">
+      <svg viewBox="0 0 320 196" width="100%" aria-label="Step 1: important nodes flagged">
+        <g stroke="#B9B6CC" stroke-width="2"><line x1="160" y1="22" x2="90" y2="72"/><line x1="160" y1="22" x2="230" y2="72"/><line x1="90" y1="72" x2="55" y2="122"/><line x1="90" y1="72" x2="125" y2="122"/><line x1="230" y1="72" x2="195" y2="122"/><line x1="230" y1="72" x2="265" y2="122"/><line x1="195" y1="122" x2="175" y2="172"/><line x1="195" y1="122" x2="215" y2="172"/><line x1="265" y1="122" x2="245" y2="172"/><line x1="265" y1="122" x2="285" y2="172"/></g>
+        <g fill="#fff" stroke="#6C4CF5" stroke-width="2.5"><circle cx="160" cy="22" r="11"/><circle cx="230" cy="72" r="11"/><circle cx="55" cy="122" r="11"/><circle cx="125" cy="122" r="11"/><circle cx="265" cy="122" r="11"/><circle cx="175" cy="172" r="11"/><circle cx="215" cy="172" r="11"/><circle cx="245" cy="172" r="11"/><circle cx="285" cy="172" r="11"/></g>
+        <g fill="#FFE3EB" stroke="#FF5C8A" stroke-width="3"><circle cx="90" cy="72" r="11"/><circle cx="195" cy="122" r="11"/></g>
+      </svg>
+      <p style="font-size:15px;margin:6px 0 0"><b>1 · Flag</b> nodes whose rules contain an important term with a single value, e.g. <span class="mono">level 1 = cart</span>.</p>
+    </div>
+    <div class="card" style="padding:12px 14px">
+      <svg viewBox="0 0 320 196" width="100%" aria-label="Step 2: walk down and collapse">
+        <g stroke="#B9B6CC" stroke-width="2"><line x1="160" y1="22" x2="90" y2="72"/><line x1="160" y1="22" x2="230" y2="72"/><line x1="230" y1="72" x2="195" y2="122"/><line x1="230" y1="72" x2="265" y2="122"/></g>
+        <g stroke="#E4E0F6" stroke-width="2"><line x1="90" y1="72" x2="55" y2="122"/><line x1="90" y1="72" x2="125" y2="122"/><line x1="195" y1="122" x2="175" y2="172"/><line x1="195" y1="122" x2="215" y2="172"/><line x1="265" y1="122" x2="245" y2="172"/><line x1="265" y1="122" x2="285" y2="172"/></g>
+        <g fill="#fff" stroke="#6C4CF5" stroke-width="2.5"><circle cx="160" cy="22" r="11"/><circle cx="230" cy="72" r="11"/><circle cx="265" cy="122" r="11"/></g>
+        <g fill="#F4F3F8" stroke="#D9D6E6" stroke-width="2"><circle cx="55" cy="122" r="11"/><circle cx="125" cy="122" r="11"/><circle cx="175" cy="172" r="11"/><circle cx="215" cy="172" r="11"/><circle cx="245" cy="172" r="11"/><circle cx="285" cy="172" r="11"/></g>
+        <g fill="#FFE3EB" stroke="#FF5C8A" stroke-width="3"><circle cx="90" cy="72" r="11"/><circle cx="195" cy="122" r="11"/></g>
+      </svg>
+      <p style="font-size:15px;margin:6px 0 0"><b>2 · Walk down</b> from the root and stop at important nodes. Branches with none collapse to their highest node.</p>
+    </div>
+    <div class="card" style="padding:12px 14px">
+      <svg viewBox="0 0 320 196" width="100%" aria-label="Step 3: selected clusters">
+        <g stroke="#E4E0F6" stroke-width="2"><line x1="160" y1="22" x2="90" y2="72"/><line x1="160" y1="22" x2="230" y2="72"/><line x1="90" y1="72" x2="55" y2="122"/><line x1="90" y1="72" x2="125" y2="122"/><line x1="230" y1="72" x2="195" y2="122"/><line x1="230" y1="72" x2="265" y2="122"/><line x1="195" y1="122" x2="175" y2="172"/><line x1="195" y1="122" x2="215" y2="172"/><line x1="265" y1="122" x2="245" y2="172"/><line x1="265" y1="122" x2="285" y2="172"/></g>
+        <g fill="#F4F3F8" stroke="#D9D6E6" stroke-width="2"><circle cx="160" cy="22" r="11"/><circle cx="230" cy="72" r="11"/><circle cx="55" cy="122" r="11"/><circle cx="125" cy="122" r="11"/><circle cx="175" cy="172" r="11"/><circle cx="215" cy="172" r="11"/><circle cx="245" cy="172" r="11"/><circle cx="285" cy="172" r="11"/></g>
+        <g fill="#D7F5EE" stroke="#1FBFA0" stroke-width="3"><circle cx="90" cy="72" r="11"/><circle cx="195" cy="122" r="11"/><circle cx="265" cy="122" r="11"/></g>
+      </svg>
+      <p style="font-size:15px;margin:6px 0 0"><b>3 · Select</b> the stopping nodes as page groups: two important ones and one catch-all.</p>
+    </div>
+  </div>
+  <div style="display:flex;gap:18px;margin-top:14px;align-items:center;font-size:15px;color:var(--muted)">
+    <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="#FFE3EB" stroke="#FF5C8A" stroke-width="2"/></svg> important</span>
+    <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="#fff" stroke="#6C4CF5" stroke-width="2"/></svg> not important</span>
+    <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="#F4F3F8" stroke="#D9D6E6" stroke-width="2"/></svg> collapsed / ignored</span>
+    <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="#D7F5EE" stroke="#1FBFA0" stroke-width="2"/></svg> selected page group</span>
+    <span style="margin-left:auto">Size guards: &gt; 1 URL or 0.5% traffic, and &lt; 80%.</span>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Deep dive · tree cut</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">Modeling deep dive · 5 Rules and category</div>
+  <h2>Describe each group with rules, then label it</h2>
+  <div class="grid2" style="grid-template-columns:1.1fr 1fr;gap:34px">
+    <div>
+      <div class="card" style="background:#fff">
+        <h3>Positive and negative conditions</h3>
+        <table class="t" style="font-size:15px">
+          <tr><td style="width:150px">URLs in the group</td><td class="mono" style="font-size:13.5px">/product/12345 · /product/98761 · /product/55002</td></tr>
+          <tr><td>Look-alike outside</td><td class="mono" style="font-size:13.5px">/product/compare?ids=1,2</td></tr>
+          <tr><td><span class="pill" style="margin:0">positive</span></td><td>what every URL shares: host = shop.example, level 1 = product, level 2 = any</td></tr>
+          <tr><td><span class="pill" style="margin:0;background:#FFD9E4">negative</span></td><td>what excludes the look-alikes: level 2 ≠ compare</td></tr>
+        </table>
+      </div>
+      <p style="font-size:17px;margin:14px 0 0"><b>Main idea:</b> if a field takes few distinct values in the group, those values become a condition; if it takes many, it becomes a wildcard. An in-house library, <b>autoconda</b>, does this.</p>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3>Translated into product rules</h3>
+        <div class="code" style="font-size:13px;padding:12px 14px">Path <span class="k">contains</span> <span class="s">"/product/"</span>
+AND Path <span class="k">does not contain</span> <span class="s">"/compare"</span></div>
+        <p style="margin-top:8px;font-size:15px">A translation layer turns the conditions into the product's operators. Illustrative example.</p>
+      </div>
+      <div class="card">
+        <h3>Page category: a vote</h3>
+        <p>Collect the categories of the important terms in the group's rules. One category: the group gets it. Several or none: left for the person to choose.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Deep dive · rules</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">Evaluation</div>
+  <h2>Second version: from 63.5% to 87.4%</h2>
+  <div class="grid2" style="grid-template-columns:1.05fr 1fr;gap:40px">
+    <div class="card" style="background:#fff">
+      <h3>What changed between the two versions</h3>
+      <table class="t" style="font-size:15.5px;margin-top:6px">
+        <tr><th></th><th>First version</th><th>Second version</th></tr>
+        <tr><td><b>Term importance</b></td><td class="muted">none</td><td>inherited from the curated library</td></tr>
+        <tr><td><b>Distance</b></td><td class="muted">every term weighs the same</td><td>important terms 9×, part weights from traffic</td></tr>
+        <tr><td><b>Cut</b></td><td class="muted">number of clusters by silhouette</td><td>walk down to nodes defined by an important term</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="display:flex;gap:26px">
+        <div><div class="stat" style="color:var(--grey)">63.5%</div><p class="muted" style="margin:6px 0 0;font-size:15px">± 10.8%<br>first version</p></div>
+        <div><div class="stat">87.4%</div><p class="muted" style="margin:6px 0 0;font-size:15px">± 12.2%<br>second version</p></div>
+      </div>
+      <div class="card" style="margin-top:20px"><h3>What the gap shows</h3><p>Using term importance, in the distance and in the cut, fixes both failures of the first version (slide 8): the distance and the tree now follow business meaning.</p></div>
+      <div class="card" style="margin-top:12px"><h3>The remaining errors</h3><p>Come mostly from imperfect importance inheritance, which the person fixes in the Term Builder.</p></div>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">Pairwise macro F1 · validation websites · ± across websites.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Evaluation</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">From model to product</div>
+  <h2>The person in the loop: two screens</h2>
+  <div class="grid2" style="grid-template-columns:400px 1fr;gap:28px">
+    <div>
+      <svg viewBox="0 0 400 330" width="400" height="330" aria-label="Sketch of the Term Builder">
+        <rect x="0.5" y="0.5" width="399" height="329" rx="10" fill="#fff" stroke="#E4E0F6"/>
+        <text x="18" y="32" font-size="16" font-weight="800" fill="#1A1737">Term Builder</text><text x="380" y="32" font-size="14" fill="#77738F" text-anchor="end">×</text>
+        <g font-size="12" font-weight="700"><text x="40" y="66" fill="#6C4CF5">PATH</text><text x="160" y="66" fill="#77738F">QUERY</text><text x="282" y="66" fill="#77738F">CVARS</text></g>
+        <rect x="26" y="73" width="62" height="3" fill="#6C4CF5"/>
+        <line x1="14" y1="76" x2="386" y2="76" stroke="#E4E0F6"/>
+        <g font-size="11.5" fill="#77738F"><text x="70" y="100">term</text><text x="230" y="100">urls</text><text x="310" y="100">traffic</text></g>
+        <g font-size="13" fill="#1A1737">
+          <rect x="30" y="118" width="14" height="14" rx="3" fill="#fff" stroke="#B9B6CC" stroke-width="1.5"/><text x="70" y="130" font-family="JetBrains Mono, monospace">en</text><text x="230" y="130">99.8%</text><text x="310" y="130">99.9%</text>
+          <rect x="30" y="162" width="14" height="14" rx="3" fill="#fff" stroke="#B9B6CC" stroke-width="1.5"/><text x="70" y="174" font-family="JetBrains Mono, monospace">store</text><text x="230" y="174">97.0%</text><text x="310" y="174">98.0%</text>
+          <rect x="30" y="206" width="14" height="14" rx="3" fill="#6C4CF5"/><path d="M33,213 l3,3 l6,-6" stroke="#fff" stroke-width="2" fill="none"/><text x="70" y="218" font-family="JetBrains Mono, monospace">category</text><text x="230" y="218">18.0%</text><text x="310" y="218">26.0%</text>
+          <rect x="30" y="250" width="14" height="14" rx="3" fill="#6C4CF5"/><path d="M33,257 l3,3 l6,-6" stroke="#fff" stroke-width="2" fill="none"/><text x="70" y="262" font-family="JetBrains Mono, monospace">basket</text><text x="230" y="262">1.0%</text><text x="310" y="262">15.0%</text>
+        </g>
+        <g stroke="#F0EEF8"><line x1="14" y1="146" x2="386" y2="146"/><line x1="14" y1="190" x2="386" y2="190"/><line x1="14" y1="234" x2="386" y2="234"/></g>
+        <rect x="300" y="288" width="80" height="28" rx="5" fill="#6C4CF5"/><text x="340" y="306" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">Apply</text>
+      </svg>
+      <p class="muted" style="font-size:14px;margin:6px 0 0"><b>Term Builder</b>: important terms are pre-checked; the person keeps or changes them. Values of a key can be listed too.</p>
+    </div>
+    <div>
+      <svg viewBox="0 0 680 330" width="680" height="330" aria-label="Sketch of the Clusters screen">
+        <rect x="0.5" y="0.5" width="679" height="329" rx="10" fill="#fff" stroke="#E4E0F6"/>
+        <text x="18" y="32" font-size="16" font-weight="800" fill="#1A1737">Clusters</text><text x="660" y="32" font-size="14" fill="#77738F" text-anchor="end">×</text>
+        <g font-size="11.5" fill="#77738F"><text x="18" y="62">Condition</text><text x="520" y="62">Traffic</text><text x="610" y="62">URLs</text></g>
+        <line x1="14" y1="70" x2="666" y2="70" stroke="#E4E0F6"/>
+        <g font-size="12" fill="#1A1737">
+          <text x="18" y="94">(Host: shop.example) AND (Path: level 1=/en/</text>
+          <text x="18" y="112">AND <tspan fill="#FF5C8A" font-weight="700">level 2=/category/</tspan>) AND (Cvars: <tspan fill="#FF5C8A" font-weight="700">page_type=product listing</tspan>)</text>
+          <text x="520" y="102" font-weight="700">26.0%</text><text x="610" y="102" font-weight="700">18.0%</text>
+        </g>
+        <line x1="14" y1="128" x2="666" y2="128" stroke="#F0EEF8"/>
+        <g font-size="12" fill="#1A1737">
+          <text x="18" y="152">(Host: shop.example) AND (Path: level 1=/en/</text>
+          <text x="18" y="170">AND <tspan fill="#FF5C8A" font-weight="700">level 2=/order/</tspan>) AND (Cvars: <tspan fill="#FF5C8A" font-weight="700">step=delivery OR payment OR confirmation</tspan>)</text>
+        </g>
+        <rect x="520" y="146" width="40" height="8" rx="3" fill="#E9E6F7"/><rect x="610" y="146" width="34" height="8" rx="3" fill="#E9E6F7"/>
+        <line x1="14" y1="186" x2="666" y2="186" stroke="#F0EEF8"/>
+        <g font-size="12" fill="#1A1737">
+          <text x="18" y="210">(Host: shop.example) AND (Cvars: <tspan fill="#FF5C8A" font-weight="700">page_type=home page</tspan>)</text>
+        </g>
+        <rect x="520" y="204" width="34" height="8" rx="3" fill="#E9E6F7"/><rect x="610" y="204" width="20" height="8" rx="3" fill="#E9E6F7"/>
+        <line x1="14" y1="226" x2="666" y2="226" stroke="#F0EEF8"/>
+        <rect x="18" y="282" width="210" height="30" rx="5" fill="#fff" stroke="#6C4CF5"/><text x="123" y="301" text-anchor="middle" font-size="12" font-weight="700" fill="#6C4CF5">View non important clusters ▾</text>
+        <rect x="586" y="282" width="80" height="30" rx="5" fill="#6C4CF5"/><text x="626" y="301" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">Back</text>
+      </svg>
+      <p class="muted" style="font-size:14px;margin:6px 0 0"><b>Clusters</b>: proposed groups with their rules (important parts highlighted), traffic and URL share. Groups without an important rule are folded away.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Product</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">From model to product</div>
+  <h2>A data flywheel</h2>
+  <div class="grid2" style="grid-template-columns:560px 1fr;gap:40px">
+    <svg viewBox="0 0 560 420" width="560" height="420" aria-label="Flywheel: propose, refine, save, learn">
+      <defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6C4CF5"/></marker></defs>
+      <circle cx="280" cy="210" r="150" fill="none" stroke="#E4E0F6" stroke-width="22"/>
+      <g fill="none" stroke="#6C4CF5" stroke-width="3">
+        <path d="M368,92 A150,150 0 0 1 418,150" marker-end="url(#fa)"/>
+        <path d="M418,270 A150,150 0 0 1 368,328" marker-end="url(#fa)"/>
+        <path d="M192,328 A150,150 0 0 1 142,270" marker-end="url(#fa)"/>
+        <path d="M142,150 A150,150 0 0 1 192,92" marker-end="url(#fa)"/>
+      </g>
+      <g font-size="13.5" text-anchor="middle">
+        <rect x="170" y="30" width="220" height="62" rx="12" fill="#6C4CF5"/><text x="280" y="57" fill="#fff" font-weight="700">Auto-mapping proposes</text><text x="280" y="76" fill="#E3DEFF" font-size="12">page groups and rules</text>
+        <rect x="372" y="180" width="180" height="62" rx="12" fill="#FF5C8A"/><text x="462" y="207" fill="#fff" font-weight="700">A person refines</text><text x="462" y="226" fill="#fff" font-size="12">terms, groups, categories</text>
+        <rect x="170" y="328" width="220" height="62" rx="12" fill="#14113B"/><text x="280" y="355" fill="#fff" font-weight="700">More qualitative mappings</text><text x="280" y="374" fill="#CFC9F5" font-size="12">on more websites</text>
+        <rect x="8" y="180" width="180" height="62" rx="12" fill="#1FBFA0"/><text x="98" y="207" fill="#fff" font-weight="700">Terms join the library</text><text x="98" y="226" fill="#fff" font-size="12">from training websites</text>
+      </g>
+      <text x="280" y="204" text-anchor="middle" font-size="15" font-weight="800" fill="#14113B">less human input</text>
+      <text x="280" y="224" text-anchor="middle" font-size="15" font-weight="800" fill="#14113B">over time</text>
+    </svg>
+    <div>
+      <div class="step"><div class="n">1</div><p>Auto-mapping proposes a mapping for a new website.</p></div>
+      <div class="step"><div class="n" style="background:var(--pink)">2</div><p>A person refines it and saves it: a new, qualitative mapping.</p></div>
+      <div class="step"><div class="n" style="background:var(--navy)">3</div><p>The terms used in its rules are parsed and added to the library, keeping the train / validation / test split by website.</p></div>
+      <div class="step"><div class="n" style="background:var(--teal)">4</div><p>New websites bring new terms and conventions, so the next proposals need less correction.</p></div>
+      <div class="band" style="margin-top:14px"><p style="margin:0;font-size:17px">Variability comes from <b>new websites</b>, so the system improves by being used on more of them.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Flywheel</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">From prediction to product</div>
+  <h2>Serving: one stateless API</h2>
+  <div class="grid2" style="grid-template-columns:1.05fr 1fr;gap:36px">
+    <div>
+      <div class="step"><div class="n">1</div><p>Validate the payload and parse each URL into host, path, query and custom variables (<b>urldata</b>).</p></div>
+      <div class="step"><div class="n">2</div><p>Score terms against the library; take the person's important terms.</p></div>
+      <div class="step"><div class="n">3</div><p>Distance matrix in <b>Rust</b>, Ward clustering in SciPy, important-term cut.</p></div>
+      <div class="step"><div class="n">4</div><p>Rules from <b>autoconda</b>, category vote; return each group with its rules, traffic and URL share, a sample URL and its category.</p></div>
+      <div class="code" style="margin-top:12px;font-size:13.5px">POST /v1/get_terms       URLs → terms + importance
+POST /v1/get_clusters    URLs + terms → page groups
+POST /v1/get_key_values  URLs + key → its values</div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:12px"><h3>No weights, no database</h3><p>The "model" is code plus the curated term library. FastAPI service in one Docker image; Python 3.11 with a Rust extension.</p></div>
+      <div class="card" style="margin-bottom:12px"><h3>Release with GitOps</h3><p>Two-stage image build (Rust wheel, then Python) → Harbor registry → version set in the infra repo → ArgoCD.</p></div>
+      <div class="card"><h3>Five environments</h3>
+        <div style="margin-top:6px"><span class="pill">staging · AWS eu-west-1</span><span class="pill">AWS eu-west-1</span><span class="pill">AWS us-east-1</span><span class="pill">Azure eastus2</span><span class="pill">Azure northeurope</span></div></div>
+    </div>
+  </div>
+  <div class="foot"><span>Auto-mapping</span><span>Serving</span></div>
+</section>
+
+
+<section class="slide dark">
+  <div class="brandbar"></div>
+  <div class="kicker" style="margin-top:20px">Recap</div>
+  <h2 style="color:#fff">Auto-mapping in four ideas</h2>
+  <div class="grid4" style="margin-top:10px">
+    <div class="card"><div class="n" style="width:34px;height:34px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:12px">1</div><h3>An important-term prior</h3><p>A curated library says which URL terms carry business meaning.</p></div>
+    <div class="card"><div class="n" style="width:34px;height:34px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:12px">2</div><h3>A weighted URL distance</h3><p>Field by field, with important terms weighing 9× more.</p></div>
+    <div class="card"><div class="n" style="width:34px;height:34px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:12px">3</div><h3>A tree cut driven by importance</h3><p>Weighting puts important-term nodes near the root, so walking down from the root stops on them.</p></div>
+    <div class="card"><div class="n" style="width:34px;height:34px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:12px">4</div><h3>Positive and negative rules</h3><p>Readable conditions per group, translated into product rules.</p></div>
+  </div>
+  <p class="lead" style="margin-top:30px;font-size:22px">And a <b style="color:#fff">data flywheel</b>: every refined mapping adds terms, and every new website makes the next proposal better.</p>
+  <div class="foot"><span>Auto-mapping</span><span>Thank you · questions</span></div>
+</section>
+
+
+<section class="slide">
+  <div class="kicker">Sources</div>
+  <h2>To go further</h2>
+  <div class="grid4" style="margin-top:6px;grid-template-columns:repeat(4,minmax(0,1fr))">
+    <a class="src card" href="https://www.youtube.com/watch?v=TRqIAQnG5JM" target="_blank" rel="noopener">
+      <div class="kicker" style="font-size:12px">Talk · video</div>
+      <h3 style="margin-top:8px">Unsupervised clustering of website URLs and clusters pattern recognition</h3>
+      <p>Slim Frikha · Paris NLP Meetup, 22 June 2022</p>
+      <p class="mono" style="font-size:13px;margin-top:10px;color:var(--violet)">youtube.com/watch?v=TRqIAQnG5JM</p>
+    </a>
+    <a class="src card" href="https://patents.google.com/patent/US11841891" target="_blank" rel="noopener">
+      <div class="kicker" style="font-size:12px">Patent · US 11,841,891 B2</div>
+      <h3 style="margin-top:8px">Mapping webpages to page groups</h3>
+      <p>ContentSquare SAS · inventors Slim Frikha, Michael Snellman · filed 29 Jul 2022, granted 12 Dec 2023</p>
+      <p class="mono" style="font-size:13px;margin-top:10px;color:var(--violet)">patents.google.com/patent/US11841891</p>
+    </a>
+    <a class="src card" href="https://patents.google.com/patent/US11681771" target="_blank" rel="noopener">
+      <div class="kicker" style="font-size:12px">Patent · US 11,681,771 B1</div>
+      <h3 style="margin-top:8px">Determining conditions for a set of webpages</h3>
+      <p>ContentSquare SAS · inventor Slim Frikha · filed 29 Jul 2022, granted 20 Jun 2023</p>
+      <p class="mono" style="font-size:13px;margin-top:10px;color:var(--violet)">patents.google.com/patent/US11681771</p>
+    </a>
+    <a class="src card" href="https://patents.google.com/patent/US12346362" target="_blank" rel="noopener">
+      <div class="kicker" style="font-size:12px">Patent · US 12,346,362 B2</div>
+      <h3 style="margin-top:8px">Later filing in the same family</h3>
+      <p>ContentSquare SAS · application US 18/378,812 · claims priority to US 11,841,891</p>
+      <p class="mono" style="font-size:13px;margin-top:10px;color:var(--violet)">patents.google.com/patent/US12346362</p>
+    </a>
+  </div>
+  
+  <div class="foot"><span>Auto-mapping</span><span>Sources</span></div>
+</section>
+</div>
+<div id="bar"></div>
+<div id="count"></div>
+<div id="help">← → navigate · F fullscreen</div>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var bar=document.getElementById('bar'),count=document.getElementById('count');
+  var i=0;
+  function fit(){var s=Math.min(innerWidth/1280,innerHeight/720);stage.style.transform='translate(-50%,-50%) scale('+s+')';}
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach(function(el,k){el.classList.toggle('active',k===i);});
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.textContent=(i+1)+' / '+slides.length;
+    if(history.replaceState) history.replaceState(null,'','#'+(i+1));
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.metaKey||e.ctrlKey||e.altKey) return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){e.preventDefault();show(i+1);}
+    else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();show(i-1);}
+    else if(k==='Home') show(0);
+    else if(k==='End') show(slides.length-1);
+    else if(k==='f'||k==='F'){ if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();} else {document.exitFullscreen&&document.exitFullscreen();} }
+  });
+  stage.addEventListener('click',function(e){ if(e.target.closest('a')) return; var r=stage.getBoundingClientRect(); show(e.clientX>r.left+r.width/2?i+1:i-1); });
+  var tx=null;
+  document.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;},{passive:true});
+  document.addEventListener('touchend',function(e){if(tx===null)return;var dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)show(i+(dx<0?1:-1));tx=null;});
+  addEventListener('resize',fit);
+  fit();
+  var h=parseInt((location.hash||'').slice(1),10);
+  show(isFinite(h)?h-1:0);
+  setTimeout(function(){document.getElementById('help').style.opacity='0';},5000);
+})();
+</script>
+</body>
+</html>

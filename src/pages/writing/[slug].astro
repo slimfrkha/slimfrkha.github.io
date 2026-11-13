@@ -1,0 +1,126 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { presentations, type Presentation } from '../../data/presentations';
+
+export function getStaticPaths() {
+  return presentations.map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+
+const { p } = Astro.props as { p: Presentation };
+---
+
+<BaseLayout title={p.title} description={p.summary}>
+  <section>
+    <a class="faint mono" href="/writing/" style="font-size:0.85rem;">← Writing</a>
+    <h1 style="margin-top:1rem;">{p.title}</h1>
+    <div class="faint mono" style="font-size:0.82rem;">{p.context}</div>
+    <p class="dim" style="margin:0.75rem 0 0;">{p.summary}</p>
+
+    <div class="deck-wrap">
+      <iframe id="deck" class="deck" data-slug={p.slug} src={p.deck} title={`${p.title} slides`} allow="fullscreen"></iframe>
+      {/* Start cover: nudges visitors to fullscreen, where the slides are readable. */}
+      <div class="deck-cover" id="deck-cover">
+        <button class="btn btn-primary" id="deck-start" type="button"><span aria-hidden="true">⛶</span> Present fullscreen</button>
+        <button class="deck-skip" id="deck-skip" type="button">or browse here</button>
+      </div>
+    </div>
+    <div class="deck-bar">
+      <span class="faint mono">Click the right or left half of a slide, or use ← →.</span>
+      <button class="btn" id="deck-fs" type="button">Fullscreen <span aria-hidden="true">⛶</span></button>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .deck-wrap { position: relative; margin-top: 2rem; }
+  .deck {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #0b0922; /* deck stage colour, avoids a flash while loading */
+  }
+  .deck-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.9rem;
+    font-size: 0.8rem;
+  }
+  .deck-cover {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border-radius: var(--radius);
+    background: rgba(10, 12, 15, 0.6);
+  }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--bg); }
+  .deck-skip {
+    background: none;
+    border: 0;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .deck-skip:hover { color: var(--text); }
+  button.btn { font-family: inherit; cursor: pointer; }
+</style>
+
+<script>
+  const frame = document.getElementById('deck') as HTMLIFrameElement;
+  const btn = document.getElementById('deck-fs') as HTMLButtonElement;
+  const cover = document.getElementById('deck-cover') as HTMLElement;
+  const goFullscreen = () => frame.requestFullscreen().then(() => frame.contentWindow?.focus()).catch(() => {});
+  // iPhone Safari has no element fullscreen; drop the cover and button rather than show dead ones.
+  if (!frame.requestFullscreen) {
+    btn.hidden = true;
+    cover.remove();
+  }
+  btn.addEventListener('click', goFullscreen);
+  // Any click on the cover dismisses it; only the primary button also goes fullscreen.
+  cover.addEventListener('click', (e) => {
+    cover.remove();
+    if ((e.target as Element).closest('#deck-start')) goFullscreen();
+    else frame.contentWindow?.focus();
+  });
+
+  // GoatCounter events, once per page view each: deck-<slug>-fullscreen, deck-<slug>-slide.
+  const sent = new Set<string>();
+  const track = (what: string) => {
+    const gc = (window as unknown as { goatcounter?: { count: (o: { path: string; event: boolean }) => void } }).goatcounter;
+    const path = `deck-${frame.dataset.slug}-${what}`;
+    if (!gc || sent.has(path)) return;
+    sent.add(path);
+    gc.count({ path, event: true });
+  };
+
+  // Also catches the deck's own F key: the iframe becomes the fullscreen element.
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement === frame) track('fullscreen');
+  });
+
+  // The deck is same-origin and rewrites its "n / total" counter on every slide change.
+  const watchSlides = () => {
+    const count = frame.contentDocument?.getElementById('count');
+    if (!count) return;
+    const first = count.textContent;
+    new MutationObserver(() => {
+      if (count.textContent !== first) track('slide');
+    }).observe(count, { childList: true, characterData: true, subtree: true });
+  };
+  // Attach only once the deck has fully loaded: before its script runs, #count exists but is
+  // empty, and its first render would then look like a slide change.
+  if (frame.contentDocument?.readyState === 'complete' && frame.contentDocument.getElementById('count')) watchSlides();
+  else frame.addEventListener('load', watchSlides);
+</script>

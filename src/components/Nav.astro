@@ -1,0 +1,17 @@
+---
+import { site } from '../data/site';
+const onWriting = Astro.url.pathname.startsWith('/writing');
+---
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">{site.name.toLowerCase().replace(/\s+/g, '')}</a>
+    <div class="links">
+      <a href="/#about">About</a>
+      <a href="/#open-source">Open Source</a>
+      <a href="/#experience">Experience</a>
+      <a href="/#publications">Publications</a>
+      <a href="/writing/" class:list={{ active: onWriting }} aria-current={onWriting ? 'page' : undefined}>Writing</a>
+    </div>
+  </div>
+</nav>
